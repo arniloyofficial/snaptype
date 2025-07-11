@@ -11,7 +11,7 @@ const theme = createTheme({
   palette: {
     primary: { main: "#6750A4" },
     secondary: { main: "#EADDFF" },
-    background: { default: "#F6F6F6" }
+    background: { default: "#FAFAFA" },
   },
   shape: { borderRadius: 16 },
   typography: {
@@ -31,15 +31,14 @@ const theme = createTheme({
   shadows: [
     "none",
     "0px 2px 8px rgba(103,80,164,0.14)",
-    // ...add more expressive shadows if needed
+    // Add more if desired
   ],
 });
 
 function App() {
   const [editorState, setEditorState] = useState({
     text: "",
-    font: "Roboto",
-    style: "Regular",
+    font: "Google Sans",
     weight: 400,
     size: 36,
     textColor: "#000000",
