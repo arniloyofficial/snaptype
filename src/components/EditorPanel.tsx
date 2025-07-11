@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Paper, Box, TextField, InputAdornment, Button,
   MenuItem, Select, FormControl, InputLabel, Typography, IconButton 
@@ -7,45 +7,19 @@ import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
 import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
 import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
-import { fonts, fontWeights } from "../fonts";
+import { fontWeights } from "../fonts";
+import FontSelector from "./FontSelector";
 
 export default function EditorPanel({ state, setState, onSave }: any) {
-  const [fontSearch, setFontSearch] = useState("");
-  const [filteredFonts, setFilteredFonts] = useState(fonts);
-
-  useEffect(() => {
-    setFilteredFonts(
-      fonts.filter(f => f.toLowerCase().includes(fontSearch.toLowerCase()))
-    );
-  }, [fontSearch]);
-
   return (
     <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 3 }}>
       <Typography variant="h5" gutterBottom>Editor</Typography>
       <Box display="flex" gap={2} alignItems="center" flexWrap="wrap">
-        {/* Font dropdown with search */}
-        <FormControl sx={{ minWidth: 150 }}>
-          <InputLabel>Font</InputLabel>
-          <Select
-            value={state.font}
-            label="Font"
-            onChange={e => setState({ ...state, font: e.target.value })}
-            MenuProps={{ PaperProps: { style: { maxHeight: 200 } } }}
-          >
-            <MenuItem>
-              <TextField
-                placeholder="Search font"
-                value={fontSearch}
-                onChange={e => setFontSearch(e.target.value)}
-                size="small"
-                sx={{ width: "100%" }}
-              />
-            </MenuItem>
-            {filteredFonts.map(font => (
-              <MenuItem key={font} value={font}>{font}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+        {/* FontSelector with dynamic Google Fonts */}
+        <FontSelector
+          value={state.font}
+          onChange={font => setState({ ...state, font })}
+        />
 
         {/* Font style/weight dropdown */}
         <FormControl sx={{ minWidth: 120 }}>
