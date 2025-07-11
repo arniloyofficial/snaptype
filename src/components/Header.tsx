@@ -1,21 +1,28 @@
 import React from "react";
-import { AppBar, Toolbar, Typography, IconButton, Link } from "@mui/material";
+import { AppBar, Toolbar, Typography, IconButton, Link, Box } from "@mui/material";
 import GitHubIcon from "@mui/icons-material/GitHub";
-import logo from "../../public/logo.svg";
 
 export default function Header() {
   return (
-    <AppBar position="static" color="transparent" elevation={1}>
+    <AppBar position="static" elevation={2} color="primary" sx={{ mb: 3 }}>
       <Toolbar>
-        <img src={logo} alt="Logo" style={{ height: 32, marginRight: 16 }} />
-        <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 700 }}>
-          Google Fonts Text Exporter
+        <img src="/logo.svg" alt="Snaptype Logo" style={{ height: 32, marginRight: 16 }} />
+        <Typography variant="h6" sx={{ flexGrow: 1, fontFamily: "Google Sans" }}>
+          Snaptype
         </Typography>
-        <Link href="https://github.com/arniloyofficial/google-fonts-text-exporter" target="_blank" rel="noopener">
-          <IconButton color="inherit">
-            <GitHubIcon />
-          </IconButton>
-        </Link>
+        <Box>
+          <Link
+            href="https://github.com/arniloyofficial/snaptype"
+            target="_blank"
+            rel="noopener"
+            color="inherit"
+            underline="none"
+            sx={{ display: "flex", alignItems: "center" }}
+          >
+            <GitHubIcon sx={{ mr: 0.5 }} />
+            GitHub Repo
+          </Link>
+        </Box>
       </Toolbar>
     </AppBar>
   );
