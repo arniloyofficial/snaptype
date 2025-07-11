@@ -1,5 +1,5 @@
 import React from "react";
-import { AppBar, Toolbar, Typography, IconButton, Link, Box } from "@mui/material";
+import { AppBar, Toolbar, Typography, Link, Box } from "@mui/material";
 import GitHubIcon from "@mui/icons-material/GitHub";
 
 export default function Header() {
