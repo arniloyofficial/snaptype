@@ -1,15 +1,22 @@
 import React from "react";
-import { AppBar, Toolbar, Typography, Link, Box } from "@mui/material";
+import { AppBar, Toolbar, Link, Box, Typography } from "@mui/material";
 import GitHubIcon from "@mui/icons-material/GitHub";
 
 export default function Header() {
   return (
     <AppBar position="static" elevation={2} color="primary" sx={{ mb: 3 }}>
       <Toolbar>
-        <img src="/logo.svg" alt="Snaptype Logo" style={{ height: 32, marginRight: 16 }} />
-        <Typography variant="h6" sx={{ flexGrow: 1, fontFamily: "Google Sans" }}>
-          Snaptype
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+          <img 
+            src="/logo.svg" 
+            alt="Snaptype Logo" 
+            style={{ 
+              height: '40px', 
+              width: 'auto', 
+              marginRight: '12px' 
+            }} 
+          />
+        </Box>
         <Box>
           <Link
             href="https://github.com/arniloyofficial/snaptype"
@@ -19,8 +26,7 @@ export default function Header() {
             underline="none"
             sx={{ display: "flex", alignItems: "center" }}
           >
-            <GitHubIcon sx={{ mr: 0.5 }} />
-            GitHub Repo
+            <GitHubIcon />
           </Link>
         </Box>
       </Toolbar>

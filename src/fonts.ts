@@ -9,3 +9,7 @@ export function loadGoogleFont(family: string, variant: string = "regular") {
   link.href = `https://fonts.googleapis.com/css?family=${family.replace(/ /g, "+")}:${variant}`;
   document.head.appendChild(link);
 }
+
+export const fontWeights = [
+  "100", "200", "300", "400", "500", "600", "700", "800", "900"
+];
