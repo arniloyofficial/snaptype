@@ -7,7 +7,7 @@ import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
 import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
 import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
-import { fonts, fontWeights } from "../fonts"; // See fonts.tsx below
+import { fonts, fontWeights } from "../fonts";
 
 export default function EditorPanel({ state, setState, onSave }: any) {
   const [fontSearch, setFontSearch] = useState("");
@@ -49,13 +49,13 @@ export default function EditorPanel({ state, setState, onSave }: any) {
 
         {/* Font style/weight dropdown */}
         <FormControl sx={{ minWidth: 120 }}>
-          <InputLabel>Style/Weight</InputLabel>
+          <InputLabel>Weight</InputLabel>
           <Select
             value={state.weight}
-            label="Style/Weight"
+            label="Weight"
             onChange={e => setState({ ...state, weight: e.target.value })}
           >
-            {fontWeights[state.font]?.map(weight => (
+            {(fontWeights[state.font] || [400]).map(weight => (
               <MenuItem key={weight} value={weight}>{weight}</MenuItem>
             ))}
           </Select>
