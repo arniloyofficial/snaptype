@@ -1,11 +1,11 @@
 import React from "react";
-import { Typography, Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 export default function Footer() {
   return (
-    <Box sx={{ textAlign: "center", py: 2, bgcolor: "background.paper", mt: 4 }}>
-      <Typography variant="body2" color="text.secondary">
-        Made with ❤️ by <b>arniloyofficial</b>
+    <Box sx={{ py: 3, bgcolor: "#EADDFF", textAlign: "center", mt: 5 }}>
+      <Typography variant="body2" color="textSecondary">
+        Built by <a href="https://github.com/arniloyofficial" target="_blank" rel="noopener noreferrer">Arniloy Official</a>
       </Typography>
     </Box>
   );
