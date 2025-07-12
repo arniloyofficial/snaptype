@@ -8,8 +8,8 @@ import {
 } from "@mui/material";
 
 // Get API key from environment variables
-const apiKey = process.env.REACT_APP_GOOGLE_FONTS_API_KEY;
-const apiUrl = process.env.REACT_APP_GOOGLE_FONTS_API_URL;
+const apiKey = import.meta.env.VITE_GOOGLE_FONTS_API_KEY;
+const apiUrl = import.meta.env.VITE_GOOGLE_FONTS_API_URL;
 
 interface FontSelectorProps {
   value: string;
