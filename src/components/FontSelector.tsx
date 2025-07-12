@@ -12,8 +12,33 @@ const apiKey = "AIzaSyD6UsY0l_2k6pAPE3dRYaZ0sbOBB4_Ax9I";
 
 interface FontSelectorProps {
   value: string;
-  onChange: (font: string) => void;
+  onChange: (font: string, availableWeights?: number[]) => void;
 }
+
+// Font weights mapping for Google Fonts
+const getFontWeights = async (fontFamily: string): Promise<number[]> => {
+  try {
+    const response = await fetch(`https://www.googleapis.com/webfonts/v1/webfonts?key=${apiKey}&family=${fontFamily.replace(/\s+/g, '+')}`);
+    const data = await response.json();
+    
+    if (data.items && data.items.length > 0) {
+      const font = data.items.find((f: any) => f.family === fontFamily);
+      if (font && font.variants) {
+        // Filter out italic variants and convert to numbers
+        const weights = font.variants
+          .filter((variant: string) => /^\d+$/.test(variant))
+          .map((variant: string) => Number(variant))
+          .sort((a: number, b: number) => a - b);
+        return weights.length > 0 ? weights : [400];
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching font weights:', error);
+  }
+  
+  // Default weights if API fails
+  return [100, 200, 300, 400, 500, 600, 700, 800, 900];
+};
 
 const FontSelector: React.FC<FontSelectorProps> = ({ value, onChange }) => {
   const [fonts, setFonts] = useState<string[]>([]);
@@ -32,7 +57,7 @@ const FontSelector: React.FC<FontSelectorProps> = ({ value, onChange }) => {
       .catch(() => setLoading(false));
   }, []);
 
-  // Load selected font
+  // Load selected font and get its weights
   useEffect(() => {
     if (value) {
       WebFont.load({
@@ -41,14 +66,20 @@ const FontSelector: React.FC<FontSelectorProps> = ({ value, onChange }) => {
     }
   }, [value]);
 
+  const handleFontChange = async (newFont: string | null) => {
+    if (newFont) {
+      // Get available weights for the new font
+      const availableWeights = await getFontWeights(newFont);
+      onChange(newFont, availableWeights);
+    }
+  };
+
   return (
     <Autocomplete
       options={fonts}
       loading={loading}
       value={value}
-      onChange={(e, newValue) => {
-        if (newValue) onChange(newValue);
-      }}
+      onChange={(e, newValue) => handleFontChange(newValue)}
       renderInput={(params) => (
         <TextField
           {...params}
