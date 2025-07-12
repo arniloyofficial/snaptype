@@ -33,21 +33,44 @@ const presetSizes = {
 // Font weights mapping for Google Fonts
 const getFontWeights = async (fontFamily: string) => {
   try {
-    const response = await fetch(`https://www.googleapis.com/webfonts/v1/webfonts?key=AIzaSyD6UsY0l_2k6pAPE3dRYaZ0sbOBB4_Ax9I&family=${fontFamily.replace(/\s+/g, '+')}`);
-    const data = await response.json();
+    const response = await fetch(`https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@100;200;300;400;500;600;700;800;900&display=swap`);
+    const cssText = await response.text();
     
-    if (data.items && data.items.length > 0) {
-      const font = data.items.find((f: any) => f.family === fontFamily);
-      if (font && font.variants) {
-        return font.variants.filter((variant: string) => /^\d+$/.test(variant)).map(Number);
+    // Parse the CSS to extract available weights
+    const weights = [];
+    const weightMatches = cssText.match(/font-weight:\s*(\d+)/g);
+    
+    if (weightMatches) {
+      const uniqueWeights = new Set();
+      weightMatches.forEach(match => {
+        const weight = parseInt(match.match(/\d+/)[0]);
+        uniqueWeights.add(weight);
+      });
+      weights.push(...Array.from(uniqueWeights).sort((a, b) => a - b));
+    }
+    
+    // If no weights found, try alternative method
+    if (weights.length === 0) {
+      const apiResponse = await fetch(`https://www.googleapis.com/webfonts/v1/webfonts?key=AIzaSyD6UsY0l_2k6pAPE3dRYaZ0sbOBB4_Ax9I&family=${fontFamily.replace(/\s+/g, '+')}`);
+      const apiData = await apiResponse.json();
+      
+      if (apiData.items && apiData.items.length > 0) {
+        const font = apiData.items.find((f: any) => f.family === fontFamily);
+        if (font && font.variants) {
+          const numericWeights = font.variants
+            .filter((variant: string) => /^\d+$/.test(variant))
+            .map((variant: string) => parseInt(variant))
+            .sort((a, b) => a - b);
+          weights.push(...numericWeights);
+        }
       }
     }
+    
+    return weights.length > 0 ? weights : [100, 200, 300, 400, 500, 600, 700, 800, 900];
   } catch (error) {
     console.error('Error fetching font weights:', error);
+    return [100, 200, 300, 400, 500, 600, 700, 800, 900];
   }
-  
-  // Default weights if API fails
-  return [100, 200, 300, 400, 500, 600, 700, 800, 900];
 };
 
 // Modern spinner component for number inputs
@@ -57,23 +80,35 @@ const ModernSpinnerButton = ({ direction, onClick, disabled }: { direction: 'up'
     onClick={onClick}
     disabled={disabled}
     sx={{
-      p: 0.5,
-      bgcolor: 'action.hover',
-      borderRadius: 1,
+      p: 0.3,
+      minWidth: 'auto',
+      minHeight: 'auto',
+      width: 20,
+      height: 20,
+      borderRadius: '4px',
+      bgcolor: 'transparent',
+      border: '1px solid',
+      borderColor: 'divider',
       '&:hover': {
-        bgcolor: 'action.selected',
+        bgcolor: 'action.hover',
+        borderColor: 'primary.main',
       },
       '&.Mui-disabled': {
         bgcolor: 'action.disabledBackground',
+        borderColor: 'action.disabled',
+      },
+      '& .MuiSvgIcon-root': {
+        fontSize: '0.8rem',
       }
     }}
   >
-    {direction === 'up' ? <KeyboardArrowUpIcon fontSize="small" /> : <KeyboardArrowDownIcon fontSize="small" />}
+    {direction === 'up' ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
   </IconButton>
 );
 
 export default function EditorPanel({ state, setState, onSave }: any) {
   const [availableWeights, setAvailableWeights] = useState<number[]>([400]);
+  const [isLoadingWeights, setIsLoadingWeights] = useState(false);
   const isDesktop = useMediaQuery('(min-width:900px)');
   const isTablet = useMediaQuery('(min-width:600px)');
   const isMobile = useMediaQuery('(max-width:599px)');
@@ -81,20 +116,30 @@ export default function EditorPanel({ state, setState, onSave }: any) {
   // Fetch available weights when font changes
   useEffect(() => {
     const fetchWeights = async () => {
-      const weights = await getFontWeights(state.font);
-      setAvailableWeights(weights);
+      if (!state.font) return;
       
-      // If current weight is not available, set to closest available weight
-      if (!weights.includes(state.weight)) {
-        const closestWeight = weights.reduce((prev, curr) => 
-          Math.abs(curr - state.weight) < Math.abs(prev - state.weight) ? curr : prev
-        );
-        setState({ ...state, weight: closestWeight });
+      setIsLoadingWeights(true);
+      try {
+        const weights = await getFontWeights(state.font);
+        setAvailableWeights(weights);
+        
+        // If current weight is not available, set to closest available weight
+        if (!weights.includes(state.weight)) {
+          const closestWeight = weights.reduce((prev, curr) => 
+            Math.abs(curr - state.weight) < Math.abs(prev - state.weight) ? curr : prev
+          );
+          setState({ ...state, weight: closestWeight });
+        }
+      } catch (error) {
+        console.error('Error fetching weights:', error);
+        setAvailableWeights([100, 200, 300, 400, 500, 600, 700, 800, 900]);
+      } finally {
+        setIsLoadingWeights(false);
       }
     };
     
     fetchWeights();
-  }, [state.font]);
+  }, [state.font, setState]);
 
   // Get responsive canvas size based on screen width
   const getResponsiveCanvasSize = (originalSize: { width: number; height: number }) => {
@@ -167,6 +212,30 @@ export default function EditorPanel({ state, setState, onSave }: any) {
     setState({ ...state, size: Math.max(8, Math.min(200, newSize)) });
   };
 
+  const handleCanvasWidthChange = (newWidth: number) => {
+    const responsiveSize = getResponsiveCanvasSize({ width: newWidth, height: state.canvasSize.height });
+    setState({ 
+      ...state, 
+      canvasSize: { ...state.canvasSize, width: newWidth },
+      displayCanvasSize: {
+        width: responsiveSize.width,
+        height: responsiveSize.height
+      }
+    });
+  };
+
+  const handleCanvasHeightChange = (newHeight: number) => {
+    const responsiveSize = getResponsiveCanvasSize({ width: state.canvasSize.width, height: newHeight });
+    setState({ 
+      ...state, 
+      canvasSize: { ...state.canvasSize, height: newHeight },
+      displayCanvasSize: {
+        width: responsiveSize.width,
+        height: responsiveSize.height
+      }
+    });
+  };
+
   return (
     <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 3 }}>
       <Typography variant="h5" gutterBottom>Create a Snaptext</Typography>
@@ -186,6 +255,7 @@ export default function EditorPanel({ state, setState, onSave }: any) {
                 value={state.weight}
                 label="Weight"
                 onChange={e => setState({ ...state, weight: e.target.value })}
+                disabled={isLoadingWeights}
               >
                 {availableWeights.map(weight => (
                   <MenuItem key={weight} value={weight}>{weight}</MenuItem>
@@ -201,7 +271,7 @@ export default function EditorPanel({ state, setState, onSave }: any) {
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mr: 1 }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mr: 1 }}>
                         <ModernSpinnerButton 
                           direction="up" 
                           onClick={() => handleSizeChange(state.size + 1)}
@@ -328,37 +398,47 @@ export default function EditorPanel({ state, setState, onSave }: any) {
               label="Width"
               type="number"
               value={state.canvasSize.width}
-              onChange={e => {
-                const newWidth = Number(e.target.value);
-                const responsiveSize = getResponsiveCanvasSize({ width: newWidth, height: state.canvasSize.height });
-                setState({ 
-                  ...state, 
-                  canvasSize: { ...state.canvasSize, width: newWidth },
-                  displayCanvasSize: {
-                    width: responsiveSize.width,
-                    height: responsiveSize.height
-                  }
-                });
+              onChange={e => handleCanvasWidthChange(Number(e.target.value))}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mr: 1 }}>
+                      <ModernSpinnerButton 
+                        direction="up" 
+                        onClick={() => handleCanvasWidthChange(state.canvasSize.width + 10)}
+                      />
+                      <ModernSpinnerButton 
+                        direction="down" 
+                        onClick={() => handleCanvasWidthChange(Math.max(100, state.canvasSize.width - 10))}
+                      />
+                    </Box>
+                  </InputAdornment>
+                ),
               }}
-              sx={{ width: 100 }}
+              sx={{ width: 120 }}
             />
             <TextField
               label="Height"
               type="number"
               value={state.canvasSize.height}
-              onChange={e => {
-                const newHeight = Number(e.target.value);
-                const responsiveSize = getResponsiveCanvasSize({ width: state.canvasSize.width, height: newHeight });
-                setState({ 
-                  ...state, 
-                  canvasSize: { ...state.canvasSize, height: newHeight },
-                  displayCanvasSize: {
-                    width: responsiveSize.width,
-                    height: responsiveSize.height
-                  }
-                });
+              onChange={e => handleCanvasHeightChange(Number(e.target.value))}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mr: 1 }}>
+                      <ModernSpinnerButton 
+                        direction="up" 
+                        onClick={() => handleCanvasHeightChange(state.canvasSize.height + 10)}
+                      />
+                      <ModernSpinnerButton 
+                        direction="down" 
+                        onClick={() => handleCanvasHeightChange(Math.max(100, state.canvasSize.height - 10))}
+                      />
+                    </Box>
+                  </InputAdornment>
+                ),
               }}
-              sx={{ width: 100 }}
+              sx={{ width: 120 }}
             />
           </Box>
 
@@ -428,6 +508,7 @@ export default function EditorPanel({ state, setState, onSave }: any) {
                 value={state.weight}
                 label="Weight"
                 onChange={e => setState({ ...state, weight: e.target.value })}
+                disabled={isLoadingWeights}
               >
                 {availableWeights.map(weight => (
                   <MenuItem key={weight} value={weight}>{weight}</MenuItem>
@@ -447,7 +528,7 @@ export default function EditorPanel({ state, setState, onSave }: any) {
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mr: 1 }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mr: 1 }}>
                         <ModernSpinnerButton 
                           direction="up" 
                           onClick={() => handleSizeChange(state.size + 1)}
@@ -622,17 +703,22 @@ export default function EditorPanel({ state, setState, onSave }: any) {
               label="Width"
               type="number"
               value={state.canvasSize.width}
-              onChange={e => {
-                const newWidth = Number(e.target.value);
-                const responsiveSize = getResponsiveCanvasSize({ width: newWidth, height: state.canvasSize.height });
-                setState({ 
-                  ...state, 
-                  canvasSize: { ...state.canvasSize, width: newWidth },
-                  displayCanvasSize: {
-                    width: responsiveSize.width,
-                    height: responsiveSize.height
-                  }
-                });
+              onChange={e => handleCanvasWidthChange(Number(e.target.value))}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mr: 1 }}>
+                      <ModernSpinnerButton 
+                        direction="up" 
+                        onClick={() => handleCanvasWidthChange(state.canvasSize.width + 10)}
+                      />
+                      <ModernSpinnerButton 
+                        direction="down" 
+                        onClick={() => handleCanvasWidthChange(Math.max(100, state.canvasSize.width - 10))}
+                      />
+                    </Box>
+                  </InputAdornment>
+                ),
               }}
               sx={{ width: 100 }}
             />
@@ -640,17 +726,22 @@ export default function EditorPanel({ state, setState, onSave }: any) {
               label="Height"
               type="number"
               value={state.canvasSize.height}
-              onChange={e => {
-                const newHeight = Number(e.target.value);
-                const responsiveSize = getResponsiveCanvasSize({ width: state.canvasSize.width, height: newHeight });
-                setState({ 
-                  ...state, 
-                  canvasSize: { ...state.canvasSize, height: newHeight },
-                  displayCanvasSize: {
-                    width: responsiveSize.width,
-                    height: responsiveSize.height
-                  }
-                });
+              onChange={e => handleCanvasHeightChange(Number(e.target.value))}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mr: 1 }}>
+                      <ModernSpinnerButton 
+                        direction="up" 
+                        onClick={() => handleCanvasHeightChange(state.canvasSize.height + 10)}
+                      />
+                      <ModernSpinnerButton 
+                        direction="down" 
+                        onClick={() => handleCanvasHeightChange(Math.max(100, state.canvasSize.height - 10))}
+                      />
+                    </Box>
+                  </InputAdornment>
+                ),
               }}
               sx={{ width: 100 }}
             />
