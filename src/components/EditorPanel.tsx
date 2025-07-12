@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   Paper, Box, TextField, InputAdornment, Button,
   MenuItem, Select, FormControl, InputLabel, Typography, IconButton,
-  Slider, Checkbox, FormControlLabel, useMediaQuery
+  Slider, Switch, FormControlLabel, useMediaQuery
 } from "@mui/material";
 import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
 import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
@@ -12,6 +12,8 @@ import FormatColorFillIcon from "@mui/icons-material/FormatColorFill";
 import FormatLineSpacingIcon from "@mui/icons-material/FormatLineSpacing";
 import SpaceBarIcon from "@mui/icons-material/SpaceBar";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import FontSelector from "./FontSelector";
 
 // Enhanced preset sizes with more popular options
@@ -48,9 +50,33 @@ const getFontWeights = async (fontFamily: string) => {
   return [100, 200, 300, 400, 500, 600, 700, 800, 900];
 };
 
+// Modern spinner component for number inputs
+const ModernSpinnerButton = ({ direction, onClick, disabled }: { direction: 'up' | 'down', onClick: () => void, disabled?: boolean }) => (
+  <IconButton
+    size="small"
+    onClick={onClick}
+    disabled={disabled}
+    sx={{
+      p: 0.5,
+      bgcolor: 'action.hover',
+      borderRadius: 1,
+      '&:hover': {
+        bgcolor: 'action.selected',
+      },
+      '&.Mui-disabled': {
+        bgcolor: 'action.disabledBackground',
+      }
+    }}
+  >
+    {direction === 'up' ? <KeyboardArrowUpIcon fontSize="small" /> : <KeyboardArrowDownIcon fontSize="small" />}
+  </IconButton>
+);
+
 export default function EditorPanel({ state, setState, onSave }: any) {
   const [availableWeights, setAvailableWeights] = useState<number[]>([400]);
   const isDesktop = useMediaQuery('(min-width:900px)');
+  const isTablet = useMediaQuery('(min-width:600px)');
+  const isMobile = useMediaQuery('(max-width:599px)');
 
   // Fetch available weights when font changes
   useEffect(() => {
@@ -69,6 +95,31 @@ export default function EditorPanel({ state, setState, onSave }: any) {
     
     fetchWeights();
   }, [state.font]);
+
+  // Get responsive canvas size based on screen width
+  const getResponsiveCanvasSize = (originalSize: { width: number; height: number }) => {
+    let maxWidth = window.innerWidth - 100; // Leave some margin
+    
+    if (isDesktop) {
+      maxWidth = Math.min(maxWidth, 800); // Max width for desktop
+    } else if (isTablet) {
+      maxWidth = Math.min(maxWidth, 600); // Max width for tablet
+    } else {
+      maxWidth = Math.min(maxWidth, 350); // Max width for mobile
+    }
+
+    // Calculate responsive dimensions maintaining aspect ratio
+    const aspectRatio = originalSize.height / originalSize.width;
+    const responsiveWidth = Math.min(originalSize.width, maxWidth);
+    const responsiveHeight = responsiveWidth * aspectRatio;
+
+    return {
+      width: responsiveWidth,
+      height: responsiveHeight,
+      originalWidth: originalSize.width,
+      originalHeight: originalSize.height
+    };
+  };
 
   // Get current preset key
   const getCurrentPreset = () => {
@@ -92,6 +143,28 @@ export default function EditorPanel({ state, setState, onSave }: any) {
       bgColor: color,
       transparentBackground: false
     });
+  };
+
+  const handlePresetChange = (presetKey: string) => {
+    const size = presetSizes[presetKey as keyof typeof presetSizes];
+    if (size) {
+      const responsiveSize = getResponsiveCanvasSize(size);
+      setState({ 
+        ...state, 
+        canvasSize: { 
+          width: size.width, 
+          height: size.height 
+        },
+        displayCanvasSize: {
+          width: responsiveSize.width,
+          height: responsiveSize.height
+        }
+      });
+    }
+  };
+
+  const handleSizeChange = (newSize: number) => {
+    setState({ ...state, size: Math.max(8, Math.min(200, newSize)) });
   };
 
   return (
@@ -119,17 +192,35 @@ export default function EditorPanel({ state, setState, onSave }: any) {
                 ))}
               </Select>
             </FormControl>
-            <TextField
-              label="Text Size"
-              type="number"
-              value={state.size}
-              onChange={e => setState({ ...state, size: Number(e.target.value) })}
-              InputProps={{
-                endAdornment: <InputAdornment position="end">px</InputAdornment>,
-                inputProps: { min: 8, max: 200, step: 1 }
-              }}
-              sx={{ width: 120 }}
-            />
+            <Box sx={{ position: 'relative' }}>
+              <TextField
+                label="Text Size"
+                type="number"
+                value={state.size}
+                onChange={e => handleSizeChange(Number(e.target.value))}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mr: 1 }}>
+                        <ModernSpinnerButton 
+                          direction="up" 
+                          onClick={() => handleSizeChange(state.size + 1)}
+                          disabled={state.size >= 200}
+                        />
+                        <ModernSpinnerButton 
+                          direction="down" 
+                          onClick={() => handleSizeChange(state.size - 1)}
+                          disabled={state.size <= 8}
+                        />
+                      </Box>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>px</Typography>
+                    </InputAdornment>
+                  ),
+                  inputProps: { min: 8, max: 200, step: 1 }
+                }}
+                sx={{ width: 140 }}
+              />
+            </Box>
           </Box>
 
           {/* Row 2: Color Selectors and Transparent Background */}
@@ -137,48 +228,56 @@ export default function EditorPanel({ state, setState, onSave }: any) {
             {/* Circular Text Color Picker */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <PaletteIcon sx={{ color: 'text.secondary' }} />
-              <input
-                type="color"
-                value={state.textColor}
-                onChange={e => setState({ ...state, textColor: e.target.value })}
-                style={{
-                  width: 40,
-                  height: 40,
-                  border: 'none',
-                  borderRadius: '50%',
-                  cursor: 'pointer',
-                  padding: 0
-                }}
-              />
+              <Box sx={{ position: 'relative' }}>
+                <input
+                  type="color"
+                  value={state.textColor}
+                  onChange={e => setState({ ...state, textColor: e.target.value })}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    border: '2px solid rgba(0, 0, 0, 0.12)',
+                    borderRadius: '50%',
+                    cursor: 'pointer',
+                    padding: 0,
+                    outline: 'none'
+                  }}
+                />
+              </Box>
               <Typography variant="body2">Text Color</Typography>
             </Box>
 
             {/* Circular Background Color Picker */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <FormatColorFillIcon sx={{ color: 'text.secondary' }} />
-              <input
-                type="color"
-                value={state.bgColor === "transparent" ? "#ffffff" : state.bgColor}
-                onChange={e => handleBgColorChange(e.target.value)}
-                disabled={state.transparentBackground}
-                style={{
-                  width: 40,
-                  height: 40,
-                  border: 'none',
-                  borderRadius: '50%',
-                  cursor: state.transparentBackground ? 'not-allowed' : 'pointer',
-                  opacity: state.transparentBackground ? 0.5 : 1,
-                  padding: 0
-                }}
-              />
+              <Box sx={{ position: 'relative' }}>
+                <input
+                  type="color"
+                  value={state.bgColor === "transparent" ? "#ffffff" : state.bgColor}
+                  onChange={e => handleBgColorChange(e.target.value)}
+                  disabled={state.transparentBackground}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    border: '2px solid rgba(0, 0, 0, 0.12)',
+                    borderRadius: '50%',
+                    cursor: state.transparentBackground ? 'not-allowed' : 'pointer',
+                    opacity: state.transparentBackground ? 0.5 : 1,
+                    padding: 0,
+                    outline: 'none'
+                  }}
+                />
+              </Box>
               <Typography variant="body2">BG Color</Typography>
             </Box>
 
+            {/* Toggle for Transparent Background */}
             <FormControlLabel
               control={
-                <Checkbox
+                <Switch
                   checked={state.transparentBackground}
                   onChange={e => handleTransparentBackgroundChange(e.target.checked)}
+                  color="primary"
                 />
               }
               label="Transparent Background"
@@ -217,10 +316,7 @@ export default function EditorPanel({ state, setState, onSave }: any) {
               <Select
                 value={getCurrentPreset()}
                 label="Canvas Preset"
-                onChange={e => {
-                  const size = presetSizes[e.target.value as keyof typeof presetSizes];
-                  if (size) setState({ ...state, canvasSize: size });
-                }}
+                onChange={e => handlePresetChange(e.target.value)}
               >
                 {Object.keys(presetSizes).map(key => (
                   <MenuItem key={key} value={key}>{key}</MenuItem>
@@ -232,18 +328,36 @@ export default function EditorPanel({ state, setState, onSave }: any) {
               label="Width"
               type="number"
               value={state.canvasSize.width}
-              onChange={e =>
-                setState({ ...state, canvasSize: { ...state.canvasSize, width: Number(e.target.value) } })
-              }
+              onChange={e => {
+                const newWidth = Number(e.target.value);
+                const responsiveSize = getResponsiveCanvasSize({ width: newWidth, height: state.canvasSize.height });
+                setState({ 
+                  ...state, 
+                  canvasSize: { ...state.canvasSize, width: newWidth },
+                  displayCanvasSize: {
+                    width: responsiveSize.width,
+                    height: responsiveSize.height
+                  }
+                });
+              }}
               sx={{ width: 100 }}
             />
             <TextField
               label="Height"
               type="number"
               value={state.canvasSize.height}
-              onChange={e =>
-                setState({ ...state, canvasSize: { ...state.canvasSize, height: Number(e.target.value) } })
-              }
+              onChange={e => {
+                const newHeight = Number(e.target.value);
+                const responsiveSize = getResponsiveCanvasSize({ width: state.canvasSize.width, height: newHeight });
+                setState({ 
+                  ...state, 
+                  canvasSize: { ...state.canvasSize, height: newHeight },
+                  displayCanvasSize: {
+                    width: responsiveSize.width,
+                    height: responsiveSize.height
+                  }
+                });
+              }}
               sx={{ width: 100 }}
             />
           </Box>
@@ -300,7 +414,7 @@ export default function EditorPanel({ state, setState, onSave }: any) {
           </Box>
         </>
       ) : (
-        /* Mobile Layout - Keep existing mobile-friendly layout */
+        /* Mobile Layout */
         <>
           {/* Row 1: Font and Weight */}
           <Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
@@ -324,17 +438,35 @@ export default function EditorPanel({ state, setState, onSave }: any) {
 
           {/* Row 2: Size and Colors */}
           <Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
-            <TextField
-              label="Text Size"
-              type="number"
-              value={state.size}
-              onChange={e => setState({ ...state, size: Number(e.target.value) })}
-              InputProps={{
-                endAdornment: <InputAdornment position="end">px</InputAdornment>,
-                inputProps: { min: 8, max: 200, step: 1 }
-              }}
-              sx={{ width: 120 }}
-            />
+            <Box sx={{ position: 'relative' }}>
+              <TextField
+                label="Size"
+                type="number"
+                value={state.size}
+                onChange={e => handleSizeChange(Number(e.target.value))}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mr: 1 }}>
+                        <ModernSpinnerButton 
+                          direction="up" 
+                          onClick={() => handleSizeChange(state.size + 1)}
+                          disabled={state.size >= 200}
+                        />
+                        <ModernSpinnerButton 
+                          direction="down" 
+                          onClick={() => handleSizeChange(state.size - 1)}
+                          disabled={state.size <= 8}
+                        />
+                      </Box>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>px</Typography>
+                    </InputAdornment>
+                  ),
+                  inputProps: { min: 8, max: 200, step: 1 }
+                }}
+                sx={{ width: 120 }}
+              />
+            </Box>
 
             {/* Circular Text Color Picker */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -346,13 +478,13 @@ export default function EditorPanel({ state, setState, onSave }: any) {
                 style={{
                   width: 40,
                   height: 40,
-                  border: 'none',
+                  border: '2px solid rgba(0, 0, 0, 0.12)',
                   borderRadius: '50%',
                   cursor: 'pointer',
-                  padding: 0
+                  padding: 0,
+                  outline: 'none'
                 }}
               />
-              <Typography variant="body2">Text Color</Typography>
             </Box>
 
             {/* Circular Background Color Picker */}
@@ -366,24 +498,25 @@ export default function EditorPanel({ state, setState, onSave }: any) {
                 style={{
                   width: 40,
                   height: 40,
-                  border: 'none',
+                  border: '2px solid rgba(0, 0, 0, 0.12)',
                   borderRadius: '50%',
                   cursor: state.transparentBackground ? 'not-allowed' : 'pointer',
                   opacity: state.transparentBackground ? 0.5 : 1,
-                  padding: 0
+                  padding: 0,
+                  outline: 'none'
                 }}
               />
-              <Typography variant="body2">BG Color</Typography>
             </Box>
           </Box>
 
-          {/* Row 3: Transparent Background Checkbox */}
+          {/* Row 3: Transparent Background Toggle */}
           <Box display="flex" gap={2} alignItems="center" mb={2}>
             <FormControlLabel
               control={
-                <Checkbox
+                <Switch
                   checked={state.transparentBackground}
                   onChange={e => handleTransparentBackgroundChange(e.target.checked)}
+                  color="primary"
                 />
               }
               label="Transparent Background"
@@ -417,9 +550,9 @@ export default function EditorPanel({ state, setState, onSave }: any) {
           </Box>
 
           {/* Row 5: Typography Controls */}
-          <Box display="flex" gap={3} alignItems="center" flexWrap="wrap" mb={2}>
+          <Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
             {/* Line Height Slider */}
-            <Box sx={{ minWidth: 200 }}>
+            <Box sx={{ minWidth: 150, flexGrow: 1 }}>
               <Box display="flex" alignItems="center" gap={1} mb={1}>
                 <FormatLineSpacingIcon sx={{ color: 'text.secondary' }} />
                 <Typography variant="body2">Line Height</Typography>
@@ -436,7 +569,7 @@ export default function EditorPanel({ state, setState, onSave }: any) {
             </Box>
 
             {/* Letter Spacing Slider */}
-            <Box sx={{ minWidth: 200 }}>
+            <Box sx={{ minWidth: 150, flexGrow: 1 }}>
               <Box display="flex" alignItems="center" gap={1} mb={1}>
                 <TextFieldsIcon sx={{ color: 'text.secondary' }} />
                 <Typography variant="body2">Letter Spacing</Typography>
@@ -453,7 +586,7 @@ export default function EditorPanel({ state, setState, onSave }: any) {
             </Box>
 
             {/* Word Spacing Slider */}
-            <Box sx={{ minWidth: 200 }}>
+            <Box sx={{ minWidth: 150, flexGrow: 1 }}>
               <Box display="flex" alignItems="center" gap={1} mb={1}>
                 <SpaceBarIcon sx={{ color: 'text.secondary' }} />
                 <Typography variant="body2">Word Spacing</Typography>
@@ -477,10 +610,7 @@ export default function EditorPanel({ state, setState, onSave }: any) {
               <Select
                 value={getCurrentPreset()}
                 label="Canvas Preset"
-                onChange={e => {
-                  const size = presetSizes[e.target.value as keyof typeof presetSizes];
-                  if (size) setState({ ...state, canvasSize: size });
-                }}
+                onChange={e => handlePresetChange(e.target.value)}
               >
                 {Object.keys(presetSizes).map(key => (
                   <MenuItem key={key} value={key}>{key}</MenuItem>
@@ -492,18 +622,36 @@ export default function EditorPanel({ state, setState, onSave }: any) {
               label="Width"
               type="number"
               value={state.canvasSize.width}
-              onChange={e =>
-                setState({ ...state, canvasSize: { ...state.canvasSize, width: Number(e.target.value) } })
-              }
+              onChange={e => {
+                const newWidth = Number(e.target.value);
+                const responsiveSize = getResponsiveCanvasSize({ width: newWidth, height: state.canvasSize.height });
+                setState({ 
+                  ...state, 
+                  canvasSize: { ...state.canvasSize, width: newWidth },
+                  displayCanvasSize: {
+                    width: responsiveSize.width,
+                    height: responsiveSize.height
+                  }
+                });
+              }}
               sx={{ width: 100 }}
             />
             <TextField
               label="Height"
               type="number"
               value={state.canvasSize.height}
-              onChange={e =>
-                setState({ ...state, canvasSize: { ...state.canvasSize, height: Number(e.target.value) } })
-              }
+              onChange={e => {
+                const newHeight = Number(e.target.value);
+                const responsiveSize = getResponsiveCanvasSize({ width: state.canvasSize.width, height: newHeight });
+                setState({ 
+                  ...state, 
+                  canvasSize: { ...state.canvasSize, height: newHeight },
+                  displayCanvasSize: {
+                    width: responsiveSize.width,
+                    height: responsiveSize.height
+                  }
+                });
+              }}
               sx={{ width: 100 }}
             />
           </Box>
