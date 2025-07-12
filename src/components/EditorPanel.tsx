@@ -784,19 +784,6 @@ export default function EditorPanel({ state, setState, onSave }: any) {
               />
             </Box>
           </Box>
-
-          {/* Row 6: Canvas Settings */}
-          <Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
-            <FormControl sx={{ minWidth: 160 }}>
-              <InputLabel>Canvas Preset</InputLabel>
-              <Select
-                value={getCurrentPreset()}
-                label="Canvas Preset"
-                onChange={e => handlePresetChange(e.target.value)}
-              >
-                {Object.keys(presetSizes).map(key => (
-                  <MenuItem key={key} value
-
                     {/* Row 6: Canvas Settings */}
           <Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
             <FormControl sx={{ minWidth: 160 }}>
