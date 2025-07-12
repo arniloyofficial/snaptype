@@ -1,15 +1,26 @@
 import React, { forwardRef } from "react";
-import { Paper, Box } from "@mui/material";
+import { Paper, Box, useTheme } from "@mui/material";
 
 const PreviewPanel = forwardRef(({ state }: any, ref: any) => {
+  const theme = useTheme();
+  
   return (
-    <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 3 }}>
+    <Paper 
+      elevation={3} 
+      sx={{ 
+        p: 3, 
+        mb: 3, 
+        borderRadius: 3,
+        // Use theme border color for the preview container
+        border: `2px solid ${theme.palette.divider}`,
+      }}
+    >
       <Box
         ref={ref}
         sx={{
           width: state.canvasSize.width,
           height: state.canvasSize.height,
-          background: state.transparentBackground ? "transparent" : state.bgColor,
+          background: state.transparentBackground ? theme.palette.divider : state.bgColor,
           display: "flex",
           alignItems: "center",
           justifyContent:
@@ -19,17 +30,8 @@ const PreviewPanel = forwardRef(({ state }: any, ref: any) => {
           transition: "all 0.2s cubic-bezier(.47,1.64,.41,.8)",
           borderRadius: 2,
           maxWidth: "100%",
-          // Add checkerboard pattern for transparent background visualization
-          ...(state.transparentBackground && {
-            backgroundImage: `
-              linear-gradient(45deg, #ccc 25%, transparent 25%),
-              linear-gradient(-45deg, #ccc 25%, transparent 25%),
-              linear-gradient(45deg, transparent 75%, #ccc 75%),
-              linear-gradient(-45deg, transparent 75%, #ccc 75%)
-            `,
-            backgroundSize: '20px 20px',
-            backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
-          })
+          // Remove the checkerboard pattern - use solid color matching border
+          border: `1px solid ${theme.palette.divider}`,
         }}
       >
         <Box
