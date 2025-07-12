@@ -7,8 +7,9 @@ import {
   Typography,
 } from "@mui/material";
 
-// TODO: Replace with your actual Google Fonts API key
-const apiKey = "AIzaSyD6UsY0l_2k6pAPE3dRYaZ0sbOBB4_Ax9I";
+// Use environment variables for API configuration
+const GOOGLE_FONTS_API_KEY = process.env.REACT_APP_GOOGLE_FONTS_API_KEY;
+const GOOGLE_FONTS_API_URL = process.env.REACT_APP_GOOGLE_FONTS_API_URL;
 
 interface FontSelectorProps {
   value: string;
@@ -18,7 +19,7 @@ interface FontSelectorProps {
 // Font weights mapping for Google Fonts
 const getFontWeights = async (fontFamily: string): Promise<number[]> => {
   try {
-    const response = await fetch(`https://www.googleapis.com/webfonts/v1/webfonts?key=${apiKey}&family=${fontFamily.replace(/\s+/g, '+')}`);
+    const response = await fetch(`${GOOGLE_FONTS_API_URL}?key=${GOOGLE_FONTS_API_KEY}&family=${fontFamily.replace(/\s+/g, '+')}`);
     const data = await response.json();
     
     if (data.items && data.items.length > 0) {
@@ -46,7 +47,7 @@ const FontSelector: React.FC<FontSelectorProps> = ({ value, onChange }) => {
 
   useEffect(() => {
     fetch(
-      `https://www.googleapis.com/webfonts/v1/webfonts?key=${apiKey}&sort=popularity`
+      `${GOOGLE_FONTS_API_URL}?key=${GOOGLE_FONTS_API_KEY}&sort=popularity`
     )
       .then((res) => res.json())
       .then((data) => {
