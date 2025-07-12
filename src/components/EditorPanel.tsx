@@ -7,6 +7,8 @@ import {
 import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
 import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
 import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
+import FormatBoldIcon from "@mui/icons-material/FormatBold";
+import FormatItalicIcon from "@mui/icons-material/FormatItalic";
 import PaletteIcon from "@mui/icons-material/Palette";
 import FormatColorFillIcon from "@mui/icons-material/FormatColorFill";
 import FormatLineSpacingIcon from "@mui/icons-material/FormatLineSpacing";
@@ -52,14 +54,14 @@ const getFontWeights = async (fontFamily: string) => {
     // If no weights found, try alternative method
     if (weights.length === 0) {
       const apiKey = import.meta.env.VITE_GOOGLE_FONTS_API_KEY;
-const apiUrl = import.meta.env.VITE_GOOGLE_FONTS_API_URL;
+      const apiUrl = import.meta.env.VITE_GOOGLE_FONTS_API_URL;
 
-if (!apiKey || !apiUrl) {
-  console.error('Google Fonts API key or URL not configured');
-  return [100, 200, 300, 400, 500, 600, 700, 800, 900];
-}
+      if (!apiKey || !apiUrl) {
+        console.error('Google Fonts API key or URL not configured');
+        return [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      }
 
-const apiResponse = await fetch(`${apiUrl}?key=${apiKey}&family=${fontFamily.replace(/\s+/g, '+')}`);
+      const apiResponse = await fetch(`${apiUrl}?key=${apiKey}&family=${fontFamily.replace(/\s+/g, '+')}`);
       const apiData = await apiResponse.json();
       
       if (apiData.items && apiData.items.length > 0) {
@@ -305,7 +307,7 @@ export default function EditorPanel({ state, setState, onSave }: any) {
             />
           </Box>
 
-          {/* Row 2: Text Color, Background Color, Transparent Background, Alignment */}
+          {/* Row 2: Text Color, Background Color, Transparent Background, Alignment, Bold, Italic */}
           <Box display="flex" gap={2} alignItems="center" mb={2} flexWrap="wrap">
             {/* Circular Text Color Picker */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -388,6 +390,25 @@ export default function EditorPanel({ state, setState, onSave }: any) {
                 title="Align Right"
               >
                 <FormatAlignRightIcon />
+              </IconButton>
+            </Box>
+
+            {/* Bold and Italic Options */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography variant="body2">Format:</Typography>
+              <IconButton
+                color={state.bold ? "primary" : "default"}
+                onClick={() => setState({ ...state, bold: !state.bold })}
+                title="Bold"
+              >
+                <FormatBoldIcon />
+              </IconButton>
+              <IconButton
+                color={state.italic ? "primary" : "default"}
+                onClick={() => setState({ ...state, italic: !state.italic })}
+                title="Italic"
+              >
+                <FormatItalicIcon />
               </IconButton>
             </Box>
           </Box>
@@ -540,8 +561,8 @@ export default function EditorPanel({ state, setState, onSave }: any) {
             />
           </Box>
 
-          {/* Row 4: Alignment */}
-          <Box display="flex" gap={1} alignItems="center" mb={2}>
+          {/* Row 4: Alignment, Bold, Italic */}
+          <Box display="flex" gap={1} alignItems="center" mb={2} flexWrap="wrap">
             <Typography variant="body2" sx={{ mr: 1 }}>Align:</Typography>
             <IconButton
               color={state.align === "left" ? "primary" : "default"}
@@ -564,6 +585,25 @@ export default function EditorPanel({ state, setState, onSave }: any) {
             >
               <FormatAlignRightIcon />
             </IconButton>
+            
+            {/* Bold and Italic for Mobile */}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2 }}>
+              <Typography variant="body2">Format:</Typography>
+              <IconButton
+                color={state.bold ? "primary" : "default"}
+                onClick={() => setState({ ...state, bold: !state.bold })}
+                title="Bold"
+              >
+                <FormatBoldIcon />
+              </IconButton>
+              <IconButton
+                color={state.italic ? "primary" : "default"}
+                onClick={() => setState({ ...state, italic: !state.italic })}
+                title="Italic"
+              >
+                <FormatItalicIcon />
+              </IconButton>
+            </Box>
           </Box>
 
           {/* Row 5: Typography Controls */}
@@ -619,77 +659,78 @@ export default function EditorPanel({ state, setState, onSave }: any) {
               />
             </Box>
           </Box>
-           {/* Row 6: Canvas Settings */}
-<Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
-  <FormControl sx={{ minWidth: 160 }}>
-    <InputLabel>Canvas Preset</InputLabel>
-    <Select
-      value={getCurrentPreset()}
-      label="Canvas Preset"
-      onChange={e => handlePresetChange(e.target.value)}
-    >
-      {Object.keys(presetSizes).map(key => (
-        <MenuItem key={key} value={key}>{key}</MenuItem>
-      ))}
-    </Select>
-  </FormControl>
-  <TextField
-    label="Width"
-    type="number"
-    value={state.canvasSize.width}
-    onChange={e => handleCanvasWidthChange(Number(e.target.value))}
-    InputProps={{
-      inputProps: { 
-        min: 100
-      }
-    }}
-    sx={{ width: 100 }}
-  />
-  <TextField
-    label="Height"
-    type="number"
-    value={state.canvasSize.height}
-    onChange={e => handleCanvasHeightChange(Number(e.target.value))}
-    InputProps={{
-      inputProps: { 
-        min: 100
-      }
-    }}
-    sx={{ width: 100 }}
-  />
-</Box>
-</>
-        )}
-        
-        {/* Text input */}
-        <TextField
-          label="Enter your text"
-          multiline
-          fullWidth
-          minRows={1}
-          maxRows={10}
-          value={state.text}
-          onChange={e => setState({ ...state, text: e.target.value })}
-          sx={{ 
-            fontFamily: state.font, 
-            mb: 2,
-            '& .MuiInputBase-root': {
-              minHeight: 'auto',
-            },
-            '& .MuiInputBase-input': {
-              minHeight: '1.2em',
-              overflow: 'hidden',
-              resize: 'none',
-            }
-          }}
-        />
-        
-        {/* Save button */}
-        <Box sx={{ textAlign: "right" }}>
-          <Button variant="contained" color="primary" onClick={onSave}>
-            Save Image
-          </Button>
-        </Box>
-      </Paper>
-    );
-  }
+          
+          {/* Row 6: Canvas Settings */}
+          <Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
+            <FormControl sx={{ minWidth: 160 }}>
+              <InputLabel>Canvas Preset</InputLabel>
+              <Select
+                value={getCurrentPreset()}
+                label="Canvas Preset"
+                onChange={e => handlePresetChange(e.target.value)}
+              >
+                {Object.keys(presetSizes).map(key => (
+                  <MenuItem key={key} value={key}>{key}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              label="Width"
+              type="number"
+              value={state.canvasSize.width}
+              onChange={e => handleCanvasWidthChange(Number(e.target.value))}
+              InputProps={{
+                inputProps: { 
+                  min: 100
+                }
+              }}
+              sx={{ width: 100 }}
+            />
+            <TextField
+              label="Height"
+              type="number"
+              value={state.canvasSize.height}
+              onChange={e => handleCanvasHeightChange(Number(e.target.value))}
+              InputProps={{
+                inputProps: { 
+                  min: 100
+                }
+              }}
+              sx={{ width: 100 }}
+            />
+          </Box>
+        </>
+      )}
+      
+      {/* Text input */}
+      <TextField
+        label="Enter your text"
+        multiline
+        fullWidth
+        minRows={1}
+        maxRows={10}
+        value={state.text}
+        onChange={e => setState({ ...state, text: e.target.value })}
+        sx={{ 
+          fontFamily: state.font, 
+          mb: 2,
+          '& .MuiInputBase-root': {
+            minHeight: 'auto',
+          },
+          '& .MuiInputBase-input': {
+            minHeight: '1.2em',
+            overflow: 'hidden',
+            resize: 'none',
+          }
+        }}
+      />
+      
+      {/* Save button */}
+      <Box sx={{ textAlign: "right" }}>
+        <Button variant="contained" color="primary" onClick={onSave}>
+          Save Image
+        </Button>
+      </Box>
+    </Paper>
+  );
+}
