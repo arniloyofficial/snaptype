@@ -1,8 +1,8 @@
 import axios from "axios";
 
 // Use environment variables for API configuration
-const GOOGLE_FONTS_API_KEY = process.env.REACT_APP_GOOGLE_FONTS_API_KEY;
-const GOOGLE_FONTS_API_URL = process.env.REACT_APP_GOOGLE_FONTS_API_URL;
+const GOOGLE_FONTS_API_KEY = import.meta.env.VITE_GOOGLE_FONTS_API_KEY;
+const GOOGLE_FONTS_API_URL = import.meta.env.VITE_GOOGLE_FONTS_API_URL;
 
 export async function fetchGoogleFontsList(): Promise<{ family: string, variants: string[] }[]> {
   if (!GOOGLE_FONTS_API_KEY || !GOOGLE_FONTS_API_URL) {
