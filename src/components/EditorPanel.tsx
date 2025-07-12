@@ -14,9 +14,8 @@ import SpaceBarIcon from "@mui/icons-material/SpaceBar";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
 import FontSelector from "./FontSelector";
 
-const GOOGLE_FONTS_API_KEY = process.env.REACT_APP_GOOGLE_FONTS_API_KEY;
-const GOOGLE_FONTS_API_URL = process.env.REACT_APP_GOOGLE_FONTS_API_URL;
-
+const GOOGLE_FONTS_API_KEY = import.meta.env.VITE_GOOGLE_FONTS_API_KEY;
+const GOOGLE_FONTS_API_URL = import.meta.env.VITE_GOOGLE_FONTS_API_URL;
 // Enhanced preset sizes with more popular options
 const presetSizes = {
   "1:1 Square": { width: 1080, height: 1080 },
@@ -52,8 +51,8 @@ const getFontWeights = async (fontFamily: string) => {
     
     // If no weights found, try alternative method
     if (weights.length === 0) {
-      const apiKey = process.env.REACT_APP_GOOGLE_FONTS_API_KEY;
-const apiUrl = process.env.REACT_APP_GOOGLE_FONTS_API_URL;
+      const apiKey = import.meta.env.VITE_GOOGLE_FONTS_API_KEY;
+const apiUrl = import.meta.env.VITE_GOOGLE_FONTS_API_URL;
 
 if (!apiKey || !apiUrl) {
   console.error('Google Fonts API key or URL not configured');
