@@ -8,10 +8,9 @@ import {
 } from "@mui/material";
 
 // Get API key from environment variables
-// For Create React App projects, use REACT_APP_ prefix
-// For Vite projects, use VITE_ prefix
-const apiKey = process.env.REACT_APP_GOOGLE_FONTS_API_KEY
-const apiUrl = process.env.REACT_APP_GOOGLE_FONTS_API_URL
+const apiKey = process.env.REACT_APP_GOOGLE_FONTS_API_KEY;
+const apiUrl = process.env.REACT_APP_GOOGLE_FONTS_API_URL;
+
 interface FontSelectorProps {
   value: string;
   onChange: (font: string, availableWeights?: number[]) => void;
@@ -20,10 +19,12 @@ interface FontSelectorProps {
 // Font weights mapping for Google Fonts
 const getFontWeights = async (fontFamily: string): Promise<number[]> => {
   try {
-    const finalApiKey = apiKey;
-    const finalApiUrl = apiUrl;
+    if (!apiKey || !apiUrl) {
+      console.error('Google Fonts API key or URL not configured');
+      return [100, 200, 300, 400, 500, 600, 700, 800, 900];
+    }
     
-    const response = await fetch(`${finalApiUrl}?key=${finalApiKey}&family=${fontFamily.replace(/\s+/g, '+')}`);
+    const response = await fetch(`${apiUrl}?key=${apiKey}&family=${fontFamily.replace(/\s+/g, '+')}`);
     const data = await response.json();
     
     if (data.items && data.items.length > 0) {
@@ -50,17 +51,23 @@ const FontSelector: React.FC<FontSelectorProps> = ({ value, onChange }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const finalApiKey = apiKey;
-    const finalApiUrl = apiUrl;
+    if (!apiKey || !apiUrl) {
+      console.error('Google Fonts API key or URL not configured');
+      setLoading(false);
+      return;
+    }
     
-    fetch(`${finalApiUrl}?key=${finalApiKey}&sort=popularity`)
+    fetch(`${apiUrl}?key=${apiKey}&sort=popularity`)
       .then((res) => res.json())
       .then((data) => {
         const families = data.items.map((font: any) => font.family);
         setFonts(families);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((error) => {
+        console.error('Error fetching fonts:', error);
+        setLoading(false);
+      });
   }, []);
 
   // Load selected font and get its weights
