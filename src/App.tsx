@@ -128,6 +128,11 @@ function App() {
     letterSpacing: 0,
     wordSpacing: 0,
     transparentBackground: true,
+    // Add text formatting properties
+    bold: false,
+    italic: false,
+    underline: false,
+    strikethrough: false,
   });
 
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
