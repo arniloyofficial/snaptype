@@ -26,35 +26,35 @@ const colorPalettes = {
     primary: "#1976D2",
     secondary: "#BBDEFB",
     lightBg: "#F3F9FF",
-    darkBg: "#0D1B2A",
+    darkBg: "#121212", // Changed to black for dark mode
   },
   green: {
     name: "Green",
     primary: "#2E7D32",
     secondary: "#C8E6C9",
     lightBg: "#F1F8E9",
-    darkBg: "#1B5E20",
+    darkBg: "#121212", // Changed to black for dark mode
   },
   orange: {
     name: "Orange",
     primary: "#F57C00",
     secondary: "#FFE0B2",
     lightBg: "#FFF8E1",
-    darkBg: "#E65100",
+    darkBg: "#121212", // Changed to black for dark mode
   },
   red: {
     name: "Red",
     primary: "#D32F2F",
     secondary: "#FFCDD2",
     lightBg: "#FFEBEE",
-    darkBg: "#B71C1C",
+    darkBg: "#121212", // Changed to black for dark mode
   },
   teal: {
     name: "Teal",
     primary: "#00796B",
     secondary: "#B2DFDB",
     lightBg: "#E0F2F1",
-    darkBg: "#004D40",
+    darkBg: "#121212", // Changed to black for dark mode
   },
 };
 
