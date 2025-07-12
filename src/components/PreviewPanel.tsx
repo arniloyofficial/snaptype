@@ -69,8 +69,9 @@ const PreviewPanel = forwardRef(({ state }: any, ref: any) => {
         sx={{
           width: responsiveCanvasSize.width,
           height: responsiveCanvasSize.height,
+          // Fix: Use 'transparent' for truly transparent background
           background: state.transparentBackground ? 
-            (theme.palette.mode === 'dark' ? '#2A2A2A' : '#F5F5F5') :
+            'transparent' :
             state.bgColor,
           display: "flex",
           alignItems: "center",
@@ -83,6 +84,15 @@ const PreviewPanel = forwardRef(({ state }: any, ref: any) => {
           maxWidth: "100%",
           border: `1px solid ${theme.palette.divider}`,
           mx: 'auto', // Center the canvas
+          // Optional: Add a subtle pattern or checkerboard to indicate transparency in the UI
+          backgroundImage: state.transparentBackground ? 
+            `linear-gradient(45deg, ${theme.palette.divider}1A 25%, transparent 25%),
+             linear-gradient(-45deg, ${theme.palette.divider}1A 25%, transparent 25%),
+             linear-gradient(45deg, transparent 75%, ${theme.palette.divider}1A 75%),
+             linear-gradient(-45deg, transparent 75%, ${theme.palette.divider}1A 75%)` :
+            'none',
+          backgroundSize: state.transparentBackground ? '20px 20px' : 'auto',
+          backgroundPosition: state.transparentBackground ? '0 0, 0 10px, 10px -10px, -10px 0px' : 'auto',
         }}
       >
         <Box
