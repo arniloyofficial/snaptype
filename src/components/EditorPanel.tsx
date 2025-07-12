@@ -9,6 +9,8 @@ import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
 import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 import FormatBoldIcon from "@mui/icons-material/FormatBold";
 import FormatItalicIcon from "@mui/icons-material/FormatItalic";
+import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined";
+import StrikethroughSIcon from "@mui/icons-material/StrikethroughS";
 import PaletteIcon from "@mui/icons-material/Palette";
 import FormatColorFillIcon from "@mui/icons-material/FormatColorFill";
 import FormatLineSpacingIcon from "@mui/icons-material/FormatLineSpacing";
@@ -227,6 +229,23 @@ export default function EditorPanel({ state, setState, onSave }: any) {
     });
   };
 
+  // Text formatting handlers
+  const handleBoldToggle = () => {
+    setState({ ...state, bold: !state.bold });
+  };
+
+  const handleItalicToggle = () => {
+    setState({ ...state, italic: !state.italic });
+  };
+
+  const handleUnderlineToggle = () => {
+    setState({ ...state, underline: !state.underline });
+  };
+
+  const handleStrikethroughToggle = () => {
+    setState({ ...state, strikethrough: !state.strikethrough });
+  };
+
   return (
     <Paper elevation={3} sx={{ p: 2.5, mb: 3, borderRadius: 3 }}>
       <Typography variant="h5" gutterBottom>Create a Snaptext</Typography>
@@ -307,7 +326,7 @@ export default function EditorPanel({ state, setState, onSave }: any) {
             />
           </Box>
 
-          {/* Row 2: Text Color, Background Color, Transparent Background, Alignment, Bold, Italic */}
+          {/* Row 2: Text Color, Background Color, Transparent Background, Alignment, Text Formatting */}
           <Box display="flex" gap={2} alignItems="center" mb={2} flexWrap="wrap">
             {/* Circular Text Color Picker */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -393,22 +412,36 @@ export default function EditorPanel({ state, setState, onSave }: any) {
               </IconButton>
             </Box>
 
-            {/* Bold and Italic Options */}
+            {/* Text Formatting Options */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant="body2">Format:</Typography>
               <IconButton
                 color={state.bold ? "primary" : "default"}
-                onClick={() => setState({ ...state, bold: !state.bold })}
+                onClick={handleBoldToggle}
                 title="Bold"
               >
                 <FormatBoldIcon />
               </IconButton>
               <IconButton
                 color={state.italic ? "primary" : "default"}
-                onClick={() => setState({ ...state, italic: !state.italic })}
+                onClick={handleItalicToggle}
                 title="Italic"
               >
                 <FormatItalicIcon />
+              </IconButton>
+              <IconButton
+                color={state.underline ? "primary" : "default"}
+                onClick={handleUnderlineToggle}
+                title="Underline"
+              >
+                <FormatUnderlinedIcon />
+              </IconButton>
+              <IconButton
+                color={state.strikethrough ? "primary" : "default"}
+                onClick={handleStrikethroughToggle}
+                title="Strikethrough"
+              >
+                <StrikethroughSIcon />
               </IconButton>
             </Box>
           </Box>
@@ -561,7 +594,7 @@ export default function EditorPanel({ state, setState, onSave }: any) {
             />
           </Box>
 
-          {/* Row 4: Alignment, Bold, Italic */}
+          {/* Row 4: Alignment and Text Formatting */}
           <Box display="flex" gap={1} alignItems="center" mb={2} flexWrap="wrap">
             <Typography variant="body2" sx={{ mr: 1 }}>Align:</Typography>
             <IconButton
@@ -586,22 +619,36 @@ export default function EditorPanel({ state, setState, onSave }: any) {
               <FormatAlignRightIcon />
             </IconButton>
             
-            {/* Bold and Italic for Mobile */}
+            {/* Text Formatting for Mobile */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 2 }}>
               <Typography variant="body2">Format:</Typography>
               <IconButton
                 color={state.bold ? "primary" : "default"}
-                onClick={() => setState({ ...state, bold: !state.bold })}
+                onClick={handleBoldToggle}
                 title="Bold"
               >
                 <FormatBoldIcon />
               </IconButton>
               <IconButton
                 color={state.italic ? "primary" : "default"}
-                onClick={() => setState({ ...state, italic: !state.italic })}
+                onClick={handleItalicToggle}
                 title="Italic"
               >
                 <FormatItalicIcon />
+              </IconButton>
+              <IconButton
+                color={state.underline ? "primary" : "default"}
+                onClick={handleUnderlineToggle}
+                title="Underline"
+              >
+                <FormatUnderlinedIcon />
+              </IconButton>
+              <IconButton
+                color={state.strikethrough ? "primary" : "default"}
+                onClick={handleStrikethroughToggle}
+                title="Strikethrough"
+              >
+                <StrikethroughSIcon />
               </IconButton>
             </Box>
           </Box>
