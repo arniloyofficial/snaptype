@@ -229,7 +229,7 @@ export default function EditorPanel({ state, setState, onSave }: any) {
     });
   };
 
-  // Text formatting handlers
+  // Text formatting handlers - FIXED: These now properly update the state
   const handleBoldToggle = () => {
     setState({ ...state, bold: !state.bold });
   };
