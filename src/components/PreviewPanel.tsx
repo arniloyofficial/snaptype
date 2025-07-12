@@ -86,10 +86,10 @@ const PreviewPanel = forwardRef(({ state }: any, ref: any) => {
           mx: 'auto', // Center the canvas
           // Optional: Add a subtle pattern or checkerboard to indicate transparency in the UI
           backgroundImage: state.transparentBackground ? 
-            `linear-gradient(45deg, ${theme.palette.divider}1A 25%, transparent 25%),
-             linear-gradient(-45deg, ${theme.palette.divider}1A 25%, transparent 25%),
-             linear-gradient(45deg, transparent 75%, ${theme.palette.divider}1A 75%),
-             linear-gradient(-45deg, transparent 75%, ${theme.palette.divider}1A 75%)` :
+            `linear-gradient(45deg, ${theme.palette.divider} 25%, transparent 25%),
+             linear-gradient(-45deg, ${theme.palette.divider} 25%, transparent 25%),
+             linear-gradient(45deg, transparent 75%, ${theme.palette.divider} 75%),
+             linear-gradient(-45deg, transparent 75%, ${theme.palette.divider} 75%)` :
             'none',
           backgroundSize: state.transparentBackground ? '20px 20px' : 'auto',
           backgroundPosition: state.transparentBackground ? '0 0, 0 10px, 10px -10px, -10px 0px' : 'auto',
