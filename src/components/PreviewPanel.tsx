@@ -70,13 +70,8 @@ const PreviewPanel = forwardRef(({ state }: any, ref: any) => {
           width: responsiveCanvasSize.width,
           height: responsiveCanvasSize.height,
           background: state.transparentBackground ? 
-            `linear-gradient(45deg, ${theme.palette.grey[200]} 25%, transparent 25%), 
-             linear-gradient(-45deg, ${theme.palette.grey[200]} 25%, transparent 25%), 
-             linear-gradient(45deg, transparent 75%, ${theme.palette.grey[200]} 75%), 
-             linear-gradient(-45deg, transparent 75%, ${theme.palette.grey[200]} 75%)` : 
+            (theme.palette.mode === 'dark' ? '#2A2A2A' : '#F5F5F5') :
             state.bgColor,
-          backgroundSize: state.transparentBackground ? '20px 20px' : 'auto',
-          backgroundPosition: state.transparentBackground ? '0 0, 0 10px, 10px -10px, -10px 0px' : 'auto',
           display: "flex",
           alignItems: "center",
           justifyContent:
