@@ -303,6 +303,119 @@ export default function EditorPanel({ state, setState, onSave }: any) {
     fetchWeights();
   }, [state.font, setState]);
 
+  // Add these auto-increment functions for canvas width/height
+const autoIncrementWidth = {
+  intervalRef: useRef<NodeJS.Timeout | null>(null),
+  timeoutRef: useRef<NodeJS.Timeout | null>(null),
+  start: () => {
+    autoIncrementWidth.timeoutRef.current = setTimeout(() => {
+      autoIncrementWidth.intervalRef.current = setInterval(() => {
+        handleCanvasWidthChange(state.canvasSize.width + 10);
+      }, 100);
+    }, 500);
+  },
+  stop: () => {
+    if (autoIncrementWidth.timeoutRef.current) {
+      clearTimeout(autoIncrementWidth.timeoutRef.current);
+      autoIncrementWidth.timeoutRef.current = null;
+    }
+    if (autoIncrementWidth.intervalRef.current) {
+      clearInterval(autoIncrementWidth.intervalRef.current);
+      autoIncrementWidth.intervalRef.current = null;
+    }
+  }
+};
+
+const autoDecrementWidth = {
+  intervalRef: useRef<NodeJS.Timeout | null>(null),
+  timeoutRef: useRef<NodeJS.Timeout | null>(null),
+  start: () => {
+    autoDecrementWidth.timeoutRef.current = setTimeout(() => {
+      autoDecrementWidth.intervalRef.current = setInterval(() => {
+        handleCanvasWidthChange(Math.max(100, state.canvasSize.width - 10));
+      }, 100);
+    }, 500);
+  },
+  stop: () => {
+    if (autoDecrementWidth.timeoutRef.current) {
+      clearTimeout(autoDecrementWidth.timeoutRef.current);
+      autoDecrementWidth.timeoutRef.current = null;
+    }
+    if (autoDecrementWidth.intervalRef.current) {
+      clearInterval(autoDecrementWidth.intervalRef.current);
+      autoDecrementWidth.intervalRef.current = null;
+    }
+  }
+};
+
+const autoIncrementHeight = {
+  intervalRef: useRef<NodeJS.Timeout | null>(null),
+  timeoutRef: useRef<NodeJS.Timeout | null>(null),
+  start: () => {
+    autoIncrementHeight.timeoutRef.current = setTimeout(() => {
+      autoIncrementHeight.intervalRef.current = setInterval(() => {
+        handleCanvasHeightChange(state.canvasSize.height + 10);
+      }, 100);
+    }, 500);
+  },
+  stop: () => {
+    if (autoIncrementHeight.timeoutRef.current) {
+      clearTimeout(autoIncrementHeight.timeoutRef.current);
+      autoIncrementHeight.timeoutRef.current = null;
+    }
+    if (autoIncrementHeight.intervalRef.current) {
+      clearInterval(autoIncrementHeight.intervalRef.current);
+      autoIncrementHeight.intervalRef.current = null;
+    }
+  }
+};
+
+const autoDecrementHeight = {
+  intervalRef: useRef<NodeJS.Timeout | null>(null),
+  timeoutRef: useRef<NodeJS.Timeout | null>(null),
+  start: () => {
+    autoDecrementHeight.timeoutRef.current = setTimeout(() => {
+      autoDecrementHeight.intervalRef.current = setInterval(() => {
+        handleCanvasHeightChange(Math.max(100, state.canvasSize.height - 10));
+      }, 100);
+    }, 500);
+  },
+  stop: () => {
+    if (autoDecrementHeight.timeoutRef.current) {
+      clearTimeout(autoDecrementHeight.timeoutRef.current);
+      autoDecrementHeight.timeoutRef.current = null;
+    }
+    if (autoDecrementHeight.intervalRef.current) {
+      clearInterval(autoDecrementHeight.intervalRef.current);
+      autoDecrementHeight.intervalRef.current = null;
+    }
+  }
+};
+
+  // Cleanup effect for auto-increment functions
+useEffect(() => {
+  return () => {
+    autoIncrementWidth.stop();
+    autoDecrementWidth.stop();
+    autoIncrementHeight.stop();
+    autoDecrementHeight.stop();
+  };
+}, []);
+
+  // Initialize responsive canvas size
+useEffect(() => {
+  if (state.canvasSize && !state.displayCanvasSize) {
+    const responsiveSize = getResponsiveCanvasSize(state.canvasSize);
+    setState({
+      ...state,
+      displayCanvasSize: {
+        width: responsiveSize.width,
+        height: responsiveSize.height
+      }
+    });
+  }
+}, [state.canvasSize, state.displayCanvasSize]);
+
   // Get responsive canvas size based on screen width
   const getResponsiveCanvasSize = (originalSize: { width: number; height: number }) => {
     let maxWidth = window.innerWidth - 100; // Leave some margin
@@ -784,107 +897,41 @@ export default function EditorPanel({ state, setState, onSave }: any) {
               />
             </Box>
           </Box>
-                    {/* Row 6: Canvas Settings */}
-          <Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
-            <FormControl sx={{ minWidth: 160 }}>
-              <InputLabel>Canvas Preset</InputLabel>
-              <Select
-                value={getCurrentPreset()}
-                label="Canvas Preset"
-                onChange={e => handlePresetChange(e.target.value)}
-              >
-                {Object.keys(presetSizes).map(key => (
-                  <MenuItem key={key} value={key}>{key}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <TextField
-              label="Width"
-              type="number"
-              value={state.canvasSize.width}
-              onChange={e => handleCanvasWidthChange(Number(e.target.value))}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mr: 1 }}>
-                      <ModernSpinnerButton 
-                        direction="up" 
-                        onClick={() => handleCanvasWidthChange(state.canvasSize.width + 10)}
-                        onMouseDown={autoIncrementWidth.start}
-                        onMouseUp={autoIncrementWidth.stop}
-                        onMouseLeave={autoIncrementWidth.stop}
-                      />
-                      <ModernSpinnerButton 
-                        direction="down" 
-                        onClick={() => handleCanvasWidthChange(Math.max(100, state.canvasSize.width - 10))}
-                        onMouseDown={autoDecrementWidth.start}
-                        onMouseUp={autoDecrementWidth.stop}
-                        onMouseLeave={autoDecrementWidth.stop}
-                      />
-                    </Box>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ 
-                width: 100,
-                '& input[type="number"]::-webkit-outer-spin-button': {
-                  WebkitAppearance: 'none',
-                  margin: 0,
-                },
-                '& input[type="number"]::-webkit-inner-spin-button': {
-                  WebkitAppearance: 'none',
-                  margin: 0,
-                },
-                '& input[type="number"]': {
-                  MozAppearance: 'textfield',
-                },
-              }}
-            />
-            <TextField
-              label="Height"
-              type="number"
-              value={state.canvasSize.height}
-              onChange={e => handleCanvasHeightChange(Number(e.target.value))}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mr: 1 }}>
-                      <ModernSpinnerButton 
-                        direction="up" 
-                        onClick={() => handleCanvasHeightChange(state.canvasSize.height + 10)}
-                        onMouseDown={autoIncrementHeight.start}
-                        onMouseUp={autoIncrementHeight.stop}
-                        onMouseLeave={autoIncrementHeight.stop}
-                      />
-                      <ModernSpinnerButton 
-                        direction="down" 
-                        onClick={() => handleCanvasHeightChange(Math.max(100, state.canvasSize.height - 10))}
-                        onMouseDown={autoDecrementHeight.start}
-                        onMouseUp={autoDecrementHeight.stop}
-                        onMouseLeave={autoDecrementHeight.stop}
-                      />
-                    </Box>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ 
-                width: 100,
-                '& input[type="number"]::-webkit-outer-spin-button': {
-                  WebkitAppearance: 'none',
-                  margin: 0,
-                },
-                '& input[type="number"]::-webkit-inner-spin-button': {
-                  WebkitAppearance: 'none',
-                  margin: 0,
-                },
-                '& input[type="number"]': {
-                  MozAppearance: 'textfield',
-                },
-              }}
-            />
-          </Box>
-        </>
-      )}
+           {/* Row 6: Canvas Settings */}
+<Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
+  <FormControl sx={{ minWidth: 160 }}>
+    <InputLabel>Canvas Preset</InputLabel>
+    <Select
+      value={getCurrentPreset()}
+      label="Canvas Preset"
+      onChange={e => handlePresetChange(e.target.value)}
+    >
+      {Object.keys(presetSizes).map(key => (
+        <MenuItem key={key} value={key}>{key}</MenuItem>
+      ))}
+    </Select>
+  </FormControl>
+  <NumberTextField
+    label="Width"
+    value={state.canvasSize.width}
+    onChange={handleCanvasWidthChange}
+    onIncrement={() => handleCanvasWidthChange(state.canvasSize.width + 10)}
+    onDecrement={() => handleCanvasWidthChange(Math.max(100, state.canvasSize.width - 10))}
+    min={100}
+    sx={{ width: 100 }}
+    decrementDisabled={state.canvasSize.width <= 100}
+  />
+  <NumberTextField
+    label="Height"
+    value={state.canvasSize.height}
+    onChange={handleCanvasHeightChange}
+    onIncrement={() => handleCanvasHeightChange(state.canvasSize.height + 10)}
+    onDecrement={() => handleCanvasHeightChange(Math.max(100, state.canvasSize.height - 10))}
+    min={100}
+    sx={{ width: 100 }}
+    decrementDisabled={state.canvasSize.height <= 100}
+  />
+</Box>
       
       {/* Text input */}
       <TextField
