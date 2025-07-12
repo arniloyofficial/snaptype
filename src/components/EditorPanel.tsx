@@ -932,36 +932,36 @@ useEffect(() => {
     decrementDisabled={state.canvasSize.height <= 100}
   />
 </Box>
-      
-      {/* Text input */}
-      <TextField
-        label="Enter your text"
-        multiline
-        fullWidth
-        minRows={1}
-        maxRows={10}
-        value={state.text}
-        onChange={e => setState({ ...state, text: e.target.value })}
-        sx={{ 
-          fontFamily: state.font, 
-          mb: 2,
-          '& .MuiInputBase-root': {
-            minHeight: 'auto',
-          },
-          '& .MuiInputBase-input': {
-            minHeight: '1.2em',
-            overflow: 'hidden',
-            resize: 'none',
-          }
-        }}
-      />
-      
-      {/* Save button */}
-      <Box sx={{ textAlign: "right" }}>
-        <Button variant="contained" color="primary" onClick={onSave}>
-          Save Image
-        </Button>
-      </Box>
-    </Paper>
-  );
-}
+</>
+        )}
+        
+        {/* Text input */}
+        <TextField
+          label="Enter your text"
+          multiline
+          fullWidth
+          minRows={1}
+          maxRows={10}
+          value={state.text}
+          onChange={e => setState({ ...state, text: e.target.value })}
+          sx={{ 
+            fontFamily: state.font, 
+            mb: 2,
+            '& .MuiInputBase-root': {
+              minHeight: 'auto',
+            },
+            '& .MuiInputBase-input': {
+              minHeight: '1.2em',
+              overflow: 'hidden',
+              resize: 'none',
+            }
+          }}
+        />
+        
+        {/* Save button */}
+        <Box sx={{ textAlign: "right" }}>
+          <Button variant="contained" color="primary" onClick={onSave}>
+            Save Image
+          </Button>
+        </Box>
+      </Paper>
