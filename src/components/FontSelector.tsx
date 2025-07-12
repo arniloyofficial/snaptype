@@ -7,10 +7,11 @@ import {
   Typography,
 } from "@mui/material";
 
-// Use environment variables for API configuration
-const GOOGLE_FONTS_API_KEY = process.env.REACT_APP_GOOGLE_FONTS_API_KEY;
-const GOOGLE_FONTS_API_URL = process.env.REACT_APP_GOOGLE_FONTS_API_URL;
-
+// Get API key from environment variables
+// For Create React App projects, use REACT_APP_ prefix
+// For Vite projects, use VITE_ prefix
+const apiKey = process.env.REACT_APP_GOOGLE_FONTS_API_KEY
+const apiUrl = process.env.REACT_APP_GOOGLE_FONTS_API_URL
 interface FontSelectorProps {
   value: string;
   onChange: (font: string, availableWeights?: number[]) => void;
@@ -19,7 +20,10 @@ interface FontSelectorProps {
 // Font weights mapping for Google Fonts
 const getFontWeights = async (fontFamily: string): Promise<number[]> => {
   try {
-    const response = await fetch(`${GOOGLE_FONTS_API_URL}?key=${GOOGLE_FONTS_API_KEY}&family=${fontFamily.replace(/\s+/g, '+')}`);
+    const finalApiKey = apiKey;
+    const finalApiUrl = apiUrl;
+    
+    const response = await fetch(`${finalApiUrl}?key=${finalApiKey}&family=${fontFamily.replace(/\s+/g, '+')}`);
     const data = await response.json();
     
     if (data.items && data.items.length > 0) {
@@ -46,9 +50,10 @@ const FontSelector: React.FC<FontSelectorProps> = ({ value, onChange }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(
-      `${GOOGLE_FONTS_API_URL}?key=${GOOGLE_FONTS_API_KEY}&sort=popularity`
-    )
+    const finalApiKey = apiKey;
+    const finalApiUrl = apiUrl;
+    
+    fetch(`${finalApiUrl}?key=${finalApiKey}&sort=popularity`)
       .then((res) => res.json())
       .then((data) => {
         const families = data.items.map((font: any) => font.family);
