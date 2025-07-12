@@ -15,14 +15,16 @@ export default function Footer({ selectedTheme, colorPalettes }: FooterProps) {
       sx={{ 
         py: 3, 
         px: 2,
-        bgcolor: theme.palette.primary.main, // This will automatically match the header color
+        // Match the header background color in both light and dark modes
+        bgcolor: theme.palette.primary.main,
         textAlign: "center", 
         mt: 'auto',
-        borderTop: `1px solid ${theme.palette.divider}`,
         // Ensure it stays at bottom
         position: 'relative',
         bottom: 0,
         width: '100%',
+        // Add subtle shadow to match header
+        boxShadow: theme.shadows[2],
       }}
     >
       <Typography 
@@ -55,7 +57,7 @@ export default function Footer({ selectedTheme, colorPalettes }: FooterProps) {
         </Box>
       </Typography>
       
-      {/* Optional: Add current theme indicator */}
+      {/* Current theme indicator */}
       <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
         <Box
           sx={{
