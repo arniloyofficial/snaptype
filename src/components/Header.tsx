@@ -38,6 +38,11 @@ export default function Header({ selectedTheme, onThemeChange, colorPalettes }: 
     handleClose();
   };
 
+  // Handle logo/website icon click to refresh page
+  const handleLogoClick = () => {
+    window.location.reload();
+  };
+
   return (
     <AppBar position="static" elevation={2} color="primary" sx={{ mb: 3 }}>
       <Toolbar>
@@ -45,11 +50,16 @@ export default function Header({ selectedTheme, onThemeChange, colorPalettes }: 
           <img 
             src="/logo.svg" 
             alt="Snaptype Logo" 
+            onClick={handleLogoClick}
             style={{ 
               height: '40px', 
               width: 'auto', 
-              marginRight: '12px' 
-            }} 
+              marginRight: '12px',
+              cursor: 'pointer',
+              transition: 'opacity 0.2s ease'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.opacity = '0.8'}
+            onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
           />
         </Box>
         
