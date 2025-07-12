@@ -1,11 +1,13 @@
 import React from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 
 export default function Footer() {
+  const theme = useTheme();
+  
   return (
     <Box sx={{ 
       py: 3, 
-      bgcolor: "#6750A4", // Same as header primary color
+      bgcolor: theme.palette.primary.main, // Use theme primary color (same as header)
       textAlign: "center", 
       mt: 5 
     }}>
