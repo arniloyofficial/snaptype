@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import {
   Paper, Box, TextField, InputAdornment, Button,
   MenuItem, Select, FormControl, InputLabel, Typography, IconButton,
@@ -73,12 +73,35 @@ const getFontWeights = async (fontFamily: string) => {
   }
 };
 
-// Modern spinner component for number inputs
-const ModernSpinnerButton = ({ direction, onClick, disabled }: { direction: 'up' | 'down', onClick: () => void, disabled?: boolean }) => (
+// Modern spinner component with tap-and-hold functionality
+const ModernSpinnerButton = ({ 
+  direction, 
+  onClick, 
+  disabled,
+  onMouseDown,
+  onMouseUp,
+  onMouseLeave,
+  onTouchStart,
+  onTouchEnd
+}: { 
+  direction: 'up' | 'down', 
+  onClick: () => void, 
+  disabled?: boolean,
+  onMouseDown?: () => void,
+  onMouseUp?: () => void,
+  onMouseLeave?: () => void,
+  onTouchStart?: () => void,
+  onTouchEnd?: () => void
+}) => (
   <IconButton
     size="small"
     onClick={onClick}
     disabled={disabled}
+    onMouseDown={onMouseDown}
+    onMouseUp={onMouseUp}
+    onMouseLeave={onMouseLeave}
+    onTouchStart={onTouchStart}
+    onTouchEnd={onTouchEnd}
     sx={{
       p: 0.3,
       minWidth: 'auto',
@@ -105,6 +128,145 @@ const ModernSpinnerButton = ({ direction, onClick, disabled }: { direction: 'up'
     {direction === 'up' ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
   </IconButton>
 );
+
+// Custom TextField with hidden arrows
+const NumberTextField = ({ 
+  label, 
+  value, 
+  onChange, 
+  onIncrement, 
+  onDecrement, 
+  min, 
+  max, 
+  step = 1,
+  unit = '',
+  sx,
+  disabled = false,
+  incrementDisabled = false,
+  decrementDisabled = false
+}: {
+  label: string,
+  value: number,
+  onChange: (value: number) => void,
+  onIncrement: () => void,
+  onDecrement: () => void,
+  min?: number,
+  max?: number,
+  step?: number,
+  unit?: string,
+  sx?: any,
+  disabled?: boolean,
+  incrementDisabled?: boolean,
+  decrementDisabled?: boolean
+}) => {
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const startAutoIncrement = useCallback(() => {
+    if (incrementDisabled || disabled) return;
+    
+    onIncrement();
+    timeoutRef.current = setTimeout(() => {
+      intervalRef.current = setInterval(() => {
+        onIncrement();
+      }, 100);
+    }, 500);
+  }, [onIncrement, incrementDisabled, disabled]);
+
+  const startAutoDecrement = useCallback(() => {
+    if (decrementDisabled || disabled) return;
+    
+    onDecrement();
+    timeoutRef.current = setTimeout(() => {
+      intervalRef.current = setInterval(() => {
+        onDecrement();
+      }, 100);
+    }, 500);
+  }, [onDecrement, decrementDisabled, disabled]);
+
+  const stopAuto = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      stopAuto();
+    };
+  }, [stopAuto]);
+
+  return (
+    <TextField
+      label={label}
+      type="number"
+      value={value}
+      onChange={(e) => onChange(Number(e.target.value))}
+      disabled={disabled}
+      InputProps={{
+        endAdornment: (
+          <InputAdornment position="end">
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mr: 1 }}>
+              <ModernSpinnerButton 
+                direction="up" 
+                onClick={onIncrement}
+                disabled={incrementDisabled || disabled}
+                onMouseDown={startAutoIncrement}
+                onMouseUp={stopAuto}
+                onMouseLeave={stopAuto}
+                onTouchStart={startAutoIncrement}
+                onTouchEnd={stopAuto}
+              />
+              <ModernSpinnerButton 
+                direction="down" 
+                onClick={onDecrement}
+                disabled={decrementDisabled || disabled}
+                onMouseDown={startAutoDecrement}
+                onMouseUp={stopAuto}
+                onMouseLeave={stopAuto}
+                onTouchStart={startAutoDecrement}
+                onTouchEnd={stopAuto}
+              />
+            </Box>
+            {unit && (
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                {unit}
+              </Typography>
+            )}
+          </InputAdornment>
+        ),
+        inputProps: { 
+          min, 
+          max, 
+          step,
+          style: {
+            // Hide browser default arrows
+            MozAppearance: 'textfield',
+            WebkitAppearance: 'none',
+            appearance: 'none'
+          }
+        },
+        sx: {
+          // Hide browser default arrows for WebKit browsers
+          '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
+            WebkitAppearance: 'none',
+            margin: 0,
+          },
+          // Hide browser default arrows for Firefox
+          '& input[type=number]': {
+            MozAppearance: 'textfield',
+          },
+        }
+      }}
+      sx={sx}
+    />
+  );
+};
 
 export default function EditorPanel({ state, setState, onSave }: any) {
   const [availableWeights, setAvailableWeights] = useState<number[]>([400]);
@@ -237,17 +399,18 @@ export default function EditorPanel({ state, setState, onSave }: any) {
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 3, mb: 3, borderRadius: 3 }}>
+    <Paper elevation={3} sx={{ p: 2.5, mb: 3, borderRadius: 3 }}>
       <Typography variant="h5" gutterBottom>Create a Snaptext</Typography>
       
       {/* Desktop Layout */}
       {isDesktop ? (
         <>
-          {/* Row 1: Font, Weight, Text Size */}
-          <Box display="flex" gap={2} alignItems="center" mb={2}>
+          {/* Row 1: Font, Weight, Text Size, Canvas Preset, Canvas Width, Canvas Height */}
+          <Box display="flex" gap={2} alignItems="center" mb={2} flexWrap="wrap">
             <FontSelector
               value={state.font}
               onChange={font => setState({ ...state, font })}
+              sx={{ minWidth: 180 }}
             />
             <FormControl sx={{ minWidth: 120 }}>
               <InputLabel>Weight</InputLabel>
@@ -262,39 +425,55 @@ export default function EditorPanel({ state, setState, onSave }: any) {
                 ))}
               </Select>
             </FormControl>
-            <Box sx={{ position: 'relative' }}>
-              <TextField
-                label="Text Size"
-                type="number"
-                value={state.size}
-                onChange={e => handleSizeChange(Number(e.target.value))}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mr: 1 }}>
-                        <ModernSpinnerButton 
-                          direction="up" 
-                          onClick={() => handleSizeChange(state.size + 1)}
-                          disabled={state.size >= 200}
-                        />
-                        <ModernSpinnerButton 
-                          direction="down" 
-                          onClick={() => handleSizeChange(state.size - 1)}
-                          disabled={state.size <= 8}
-                        />
-                      </Box>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>px</Typography>
-                    </InputAdornment>
-                  ),
-                  inputProps: { min: 8, max: 200, step: 1 }
-                }}
-                sx={{ width: 140 }}
-              />
-            </Box>
+            <NumberTextField
+              label="Text Size"
+              value={state.size}
+              onChange={handleSizeChange}
+              onIncrement={() => handleSizeChange(state.size + 1)}
+              onDecrement={() => handleSizeChange(state.size - 1)}
+              min={8}
+              max={200}
+              unit="px"
+              sx={{ width: 140 }}
+              incrementDisabled={state.size >= 200}
+              decrementDisabled={state.size <= 8}
+            />
+            <FormControl sx={{ minWidth: 160 }}>
+              <InputLabel>Canvas Preset</InputLabel>
+              <Select
+                value={getCurrentPreset()}
+                label="Canvas Preset"
+                onChange={e => handlePresetChange(e.target.value)}
+              >
+                {Object.keys(presetSizes).map(key => (
+                  <MenuItem key={key} value={key}>{key}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <NumberTextField
+              label="Width"
+              value={state.canvasSize.width}
+              onChange={handleCanvasWidthChange}
+              onIncrement={() => handleCanvasWidthChange(state.canvasSize.width + 10)}
+              onDecrement={() => handleCanvasWidthChange(Math.max(100, state.canvasSize.width - 10))}
+              min={100}
+              sx={{ width: 120 }}
+              decrementDisabled={state.canvasSize.width <= 100}
+            />
+            <NumberTextField
+              label="Height"
+              value={state.canvasSize.height}
+              onChange={handleCanvasHeightChange}
+              onIncrement={() => handleCanvasHeightChange(state.canvasSize.height + 10)}
+              onDecrement={() => handleCanvasHeightChange(Math.max(100, state.canvasSize.height - 10))}
+              min={100}
+              sx={{ width: 120 }}
+              decrementDisabled={state.canvasSize.height <= 100}
+            />
           </Box>
 
-          {/* Row 2: Color Selectors and Transparent Background */}
-          <Box display="flex" gap={2} alignItems="center" mb={2}>
+          {/* Row 2: Text Color, Background Color, Transparent Background, Alignment */}
+          <Box display="flex" gap={2} alignItems="center" mb={2} flexWrap="wrap">
             {/* Circular Text Color Picker */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <PaletteIcon sx={{ color: 'text.secondary' }} />
@@ -352,10 +531,8 @@ export default function EditorPanel({ state, setState, onSave }: any) {
               }
               label="Transparent Background"
             />
-          </Box>
 
-          {/* Row 3: Alignment, Canvas Preset, Canvas Width, Canvas Height */}
-          <Box display="flex" gap={2} alignItems="center" mb={2}>
+            {/* Alignment Options */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Typography variant="body2">Align:</Typography>
               <IconButton
@@ -380,69 +557,9 @@ export default function EditorPanel({ state, setState, onSave }: any) {
                 <FormatAlignRightIcon />
               </IconButton>
             </Box>
-
-            <FormControl sx={{ minWidth: 160 }}>
-              <InputLabel>Canvas Preset</InputLabel>
-              <Select
-                value={getCurrentPreset()}
-                label="Canvas Preset"
-                onChange={e => handlePresetChange(e.target.value)}
-              >
-                {Object.keys(presetSizes).map(key => (
-                  <MenuItem key={key} value={key}>{key}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <TextField
-              label="Width"
-              type="number"
-              value={state.canvasSize.width}
-              onChange={e => handleCanvasWidthChange(Number(e.target.value))}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mr: 1 }}>
-                      <ModernSpinnerButton 
-                        direction="up" 
-                        onClick={() => handleCanvasWidthChange(state.canvasSize.width + 10)}
-                      />
-                      <ModernSpinnerButton 
-                        direction="down" 
-                        onClick={() => handleCanvasWidthChange(Math.max(100, state.canvasSize.width - 10))}
-                      />
-                    </Box>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ width: 120 }}
-            />
-            <TextField
-              label="Height"
-              type="number"
-              value={state.canvasSize.height}
-              onChange={e => handleCanvasHeightChange(Number(e.target.value))}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mr: 1 }}>
-                      <ModernSpinnerButton 
-                        direction="up" 
-                        onClick={() => handleCanvasHeightChange(state.canvasSize.height + 10)}
-                      />
-                      <ModernSpinnerButton 
-                        direction="down" 
-                        onClick={() => handleCanvasHeightChange(Math.max(100, state.canvasSize.height - 10))}
-                      />
-                    </Box>
-                  </InputAdornment>
-                ),
-              }}
-              sx={{ width: 120 }}
-            />
           </Box>
 
-          {/* Row 4: Three Sliders */}
+          {/* Row 3: Three Sliders */}
           <Box display="flex" gap={3} alignItems="center" mb={2}>
             {/* Line Height Slider */}
             <Box sx={{ minWidth: 200 }}>
@@ -519,35 +636,19 @@ export default function EditorPanel({ state, setState, onSave }: any) {
 
           {/* Row 2: Size and Colors */}
           <Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
-            <Box sx={{ position: 'relative' }}>
-              <TextField
-                label="Size"
-                type="number"
-                value={state.size}
-                onChange={e => handleSizeChange(Number(e.target.value))}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, mr: 1 }}>
-                        <ModernSpinnerButton 
-                          direction="up" 
-                          onClick={() => handleSizeChange(state.size + 1)}
-                          disabled={state.size >= 200}
-                        />
-                        <ModernSpinnerButton 
-                          direction="down" 
-                          onClick={() => handleSizeChange(state.size - 1)}
-                          disabled={state.size <= 8}
-                        />
-                      </Box>
-                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>px</Typography>
-                    </InputAdornment>
-                  ),
-                  inputProps: { min: 8, max: 200, step: 1 }
-                }}
-                sx={{ width: 120 }}
-              />
-            </Box>
+            <NumberTextField
+              label="Size"
+              value={state.size}
+              onChange={handleSizeChange}
+              onIncrement={() => handleSizeChange(state.size + 1)}
+              onDecrement={() => handleSizeChange(state.size - 1)}
+              min={8}
+              max={200}
+              unit="px"
+              sx={{ width: 120 }}
+              incrementDisabled={state.size >= 200}
+              decrementDisabled={state.size <= 8}
+            />
 
             {/* Circular Text Color Picker */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -694,11 +795,22 @@ export default function EditorPanel({ state, setState, onSave }: any) {
                 onChange={e => handlePresetChange(e.target.value)}
               >
                 {Object.keys(presetSizes).map(key => (
+                  <MenuItem key={key} value
+
+                    {/* Row 6: Canvas Settings */}
+          <Box display="flex" gap={2} alignItems="center" flexWrap="wrap" mb={2}>
+            <FormControl sx={{ minWidth: 160 }}>
+              <InputLabel>Canvas Preset</InputLabel>
+              <Select
+                value={getCurrentPreset()}
+                label="Canvas Preset"
+                onChange={e => handlePresetChange(e.target.value)}
+              >
+                {Object.keys(presetSizes).map(key => (
                   <MenuItem key={key} value={key}>{key}</MenuItem>
                 ))}
               </Select>
             </FormControl>
-
             <TextField
               label="Width"
               type="number"
@@ -711,16 +823,35 @@ export default function EditorPanel({ state, setState, onSave }: any) {
                       <ModernSpinnerButton 
                         direction="up" 
                         onClick={() => handleCanvasWidthChange(state.canvasSize.width + 10)}
+                        onMouseDown={autoIncrementWidth.start}
+                        onMouseUp={autoIncrementWidth.stop}
+                        onMouseLeave={autoIncrementWidth.stop}
                       />
                       <ModernSpinnerButton 
                         direction="down" 
                         onClick={() => handleCanvasWidthChange(Math.max(100, state.canvasSize.width - 10))}
+                        onMouseDown={autoDecrementWidth.start}
+                        onMouseUp={autoDecrementWidth.stop}
+                        onMouseLeave={autoDecrementWidth.stop}
                       />
                     </Box>
                   </InputAdornment>
                 ),
               }}
-              sx={{ width: 100 }}
+              sx={{ 
+                width: 100,
+                '& input[type="number"]::-webkit-outer-spin-button': {
+                  WebkitAppearance: 'none',
+                  margin: 0,
+                },
+                '& input[type="number"]::-webkit-inner-spin-button': {
+                  WebkitAppearance: 'none',
+                  margin: 0,
+                },
+                '& input[type="number"]': {
+                  MozAppearance: 'textfield',
+                },
+              }}
             />
             <TextField
               label="Height"
@@ -734,32 +865,63 @@ export default function EditorPanel({ state, setState, onSave }: any) {
                       <ModernSpinnerButton 
                         direction="up" 
                         onClick={() => handleCanvasHeightChange(state.canvasSize.height + 10)}
+                        onMouseDown={autoIncrementHeight.start}
+                        onMouseUp={autoIncrementHeight.stop}
+                        onMouseLeave={autoIncrementHeight.stop}
                       />
                       <ModernSpinnerButton 
                         direction="down" 
                         onClick={() => handleCanvasHeightChange(Math.max(100, state.canvasSize.height - 10))}
+                        onMouseDown={autoDecrementHeight.start}
+                        onMouseUp={autoDecrementHeight.stop}
+                        onMouseLeave={autoDecrementHeight.stop}
                       />
                     </Box>
                   </InputAdornment>
                 ),
               }}
-              sx={{ width: 100 }}
+              sx={{ 
+                width: 100,
+                '& input[type="number"]::-webkit-outer-spin-button': {
+                  WebkitAppearance: 'none',
+                  margin: 0,
+                },
+                '& input[type="number"]::-webkit-inner-spin-button': {
+                  WebkitAppearance: 'none',
+                  margin: 0,
+                },
+                '& input[type="number"]': {
+                  MozAppearance: 'textfield',
+                },
+              }}
             />
           </Box>
         </>
       )}
-
+      
       {/* Text input */}
       <TextField
         label="Enter your text"
         multiline
         fullWidth
-        minRows={3}
+        minRows={1}
+        maxRows={10}
         value={state.text}
         onChange={e => setState({ ...state, text: e.target.value })}
-        sx={{ fontFamily: state.font, mb: 2 }}
+        sx={{ 
+          fontFamily: state.font, 
+          mb: 2,
+          '& .MuiInputBase-root': {
+            minHeight: 'auto',
+          },
+          '& .MuiInputBase-input': {
+            minHeight: '1.2em',
+            overflow: 'hidden',
+            resize: 'none',
+          }
+        }}
       />
-
+      
       {/* Save button */}
       <Box sx={{ textAlign: "right" }}>
         <Button variant="contained" color="primary" onClick={onSave}>
