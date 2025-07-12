@@ -73,62 +73,6 @@ const getFontWeights = async (fontFamily: string) => {
   }
 };
 
-// Modern spinner component with tap-and-hold functionality
-const ModernSpinnerButton = ({ 
-  direction, 
-  onClick, 
-  disabled,
-  onMouseDown,
-  onMouseUp,
-  onMouseLeave,
-  onTouchStart,
-  onTouchEnd
-}: { 
-  direction: 'up' | 'down', 
-  onClick: () => void, 
-  disabled?: boolean,
-  onMouseDown?: () => void,
-  onMouseUp?: () => void,
-  onMouseLeave?: () => void,
-  onTouchStart?: () => void,
-  onTouchEnd?: () => void
-}) => (
-  <IconButton
-    size="small"
-    onClick={onClick}
-    disabled={disabled}
-    onMouseDown={onMouseDown}
-    onMouseUp={onMouseUp}
-    onMouseLeave={onMouseLeave}
-    onTouchStart={onTouchStart}
-    onTouchEnd={onTouchEnd}
-    sx={{
-      p: 0.3,
-      minWidth: 'auto',
-      minHeight: 'auto',
-      width: 20,
-      height: 20,
-      borderRadius: '4px',
-      bgcolor: 'transparent',
-      border: '1px solid',
-      borderColor: 'divider',
-      '&:hover': {
-        bgcolor: 'action.hover',
-        borderColor: 'primary.main',
-      },
-      '&.Mui-disabled': {
-        bgcolor: 'action.disabledBackground',
-        borderColor: 'action.disabled',
-      },
-      '& .MuiSvgIcon-root': {
-        fontSize: '0.8rem',
-      }
-    }}
-  >
-    {direction === 'up' ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-  </IconButton>
-);
-
 // Custom TextField with hidden arrows
 const NumberTextField = ({ 
   label, 
