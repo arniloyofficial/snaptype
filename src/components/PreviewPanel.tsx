@@ -51,6 +51,23 @@ const PreviewPanel = forwardRef(({ state }: any, ref: any) => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [state.canvasSize, isMobile, isTablet]);
+
+  // Build text decoration string
+  const getTextDecoration = () => {
+    const decorations = [];
+    if (state.underline) decorations.push('underline');
+    if (state.strikethrough) decorations.push('line-through');
+    return decorations.length > 0 ? decorations.join(' ') : 'none';
+  };
+
+  // Build font weight - handle both bold toggle and weight setting
+  const getFontWeight = () => {
+    if (state.bold) {
+      // If bold is enabled, use a bold weight
+      return state.weight >= 600 ? state.weight : Math.max(state.weight + 300, 700);
+    }
+    return state.weight;
+  };
   
   return (
     <Paper 
@@ -109,7 +126,9 @@ const PreviewPanel = forwardRef(({ state }: any, ref: any) => {
               width: "100%",
               textAlign: state.align,
               fontFamily: state.font,
-              fontWeight: state.weight, // This should now properly apply the weight
+              fontWeight: getFontWeight(), // Use the computed font weight
+              fontStyle: state.italic ? 'italic' : 'normal', // Apply italic styling
+              textDecoration: getTextDecoration(), // Apply underline and strikethrough
               fontSize: `${Math.max(state.size * (responsiveCanvasSize.width / state.canvasSize.width), 12)}px`, // Scale font size proportionally
               color: state.textColor,
               lineHeight: state.lineHeight,
