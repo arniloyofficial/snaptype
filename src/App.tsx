@@ -26,35 +26,35 @@ const colorPalettes = {
     primary: "#1976D2",
     secondary: "#BBDEFB",
     lightBg: "#F3F9FF",
-    darkBg: "#121212", // Changed to black for dark mode
+    darkBg: "#121212",
   },
   green: {
     name: "Green",
     primary: "#2E7D32",
     secondary: "#C8E6C9",
     lightBg: "#F1F8E9",
-    darkBg: "#121212", // Changed to black for dark mode
+    darkBg: "#121212",
   },
   orange: {
     name: "Orange",
     primary: "#F57C00",
     secondary: "#FFE0B2",
     lightBg: "#FFF8E1",
-    darkBg: "#121212", // Changed to black for dark mode
+    darkBg: "#121212",
   },
   red: {
     name: "Red",
     primary: "#D32F2F",
     secondary: "#FFCDD2",
     lightBg: "#FFEBEE",
-    darkBg: "#121212", // Changed to black for dark mode
+    darkBg: "#121212",
   },
   teal: {
     name: "Teal",
     primary: "#00796B",
     secondary: "#B2DFDB",
     lightBg: "#E0F2F1",
-    darkBg: "#121212", // Changed to black for dark mode
+    darkBg: "#121212",
   },
 };
 
@@ -179,7 +179,11 @@ function App() {
           state={editorState}
         />
       </Container>
-      <Footer selectedTheme={selectedTheme} colorPalettes={colorPalettes} />
+      <Footer 
+        selectedTheme={selectedTheme} 
+        colorPalettes={colorPalettes} 
+        isDark={prefersDark}
+      />
     </ThemeProvider>
   );
 }
