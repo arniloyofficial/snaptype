@@ -684,7 +684,6 @@ export default function EditorPanel({
           </Accordion>
         </>
       ) : (
-        ) : (
         /* Mobile Layout */
         <>
           {/* Current Text Layer Info */}
