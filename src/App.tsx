@@ -3,14 +3,14 @@ import {
   ThemeProvider,
   createTheme,
   CssBaseline,
-  Container,
+  Box,
   useMediaQuery,
 } from "@mui/material";
 import Header from "./components/Header";
-import EditorPanel from "./components/EditorPanel";
+import Sidebar from "./components/Sidebar";
+import MobileToolbar from "./components/MobileToolbar";
 import PreviewPanel from "./components/PreviewPanel";
 import SaveDialog from "./components/SaveDialog";
-import Footer from "./components/Footer";
 
 // Material Design v3 Color Palettes
 const colorPalettes = {
@@ -60,26 +60,8 @@ const colorPalettes = {
 
 function App() {
   const prefersDark = useMediaQuery("(prefers-color-scheme: dark)");
+  const isMobile = useMediaQuery("(max-width:768px)");
   const [selectedTheme, setSelectedTheme] = useState<keyof typeof colorPalettes>("purple");
-  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
-
-  // Handle responsive screen width
-  useEffect(() => {
-    const handleResize = () => {
-      setScreenWidth(window.innerWidth);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Calculate responsive canvas width
-  const getResponsiveCanvasWidth = (originalWidth: number) => {
-    const maxWidth = screenWidth > 1200 ? 1000 : 
-                    screenWidth > 768 ? screenWidth * 0.8 : 
-                    screenWidth * 0.9;
-    return Math.min(originalWidth, maxWidth);
-  };
 
   const theme = useMemo(() => {
     const palette = colorPalettes[selectedTheme];
@@ -111,6 +93,7 @@ function App() {
         "none",
         `0px 2px 8px ${palette.primary}14`,
         `0px 4px 16px ${palette.primary}20`,
+        `0px 8px 32px ${palette.primary}30`,
       ],
     });
   }, [prefersDark, selectedTheme]);
@@ -121,14 +104,13 @@ function App() {
     weight: 400,
     size: 36,
     textColor: prefersDark ? "#FFFFFF" : "#000000",
-    bgColor: "transparent",
+    bgColor: prefersDark ? "#1E1E1E" : "#FFFFFF",
     align: "center",
     canvasSize: { width: 800, height: 800 },
     lineHeight: 1.2,
     letterSpacing: 0,
     wordSpacing: 0,
-    transparentBackground: true,
-    // Add text formatting properties
+    transparentBackground: false,
     bold: false,
     italic: false,
     underline: false,
@@ -139,55 +121,102 @@ function App() {
   const previewRef = useRef<HTMLDivElement>(null);
 
   // Update text color when theme changes
-  React.useEffect(() => {
+  useEffect(() => {
     setEditorState(prev => ({
       ...prev,
       textColor: prefersDark ? "#FFFFFF" : "#000000"
     }));
   }, [prefersDark]);
 
-  // Handle canvas size changes with responsive adjustments
+  // Handle canvas size changes - no responsive adjustments needed since we use fixed 500px height
   const handleCanvasSizeChange = (newSize: { width: number; height: number }) => {
-    const responsiveWidth = getResponsiveCanvasWidth(newSize.width);
-    const aspectRatio = newSize.height / newSize.width;
-    const responsiveHeight = responsiveWidth * aspectRatio;
-    
     setEditorState(prev => ({
       ...prev,
-      canvasSize: {
-        width: responsiveWidth,
-        height: responsiveHeight
-      }
+      canvasSize: newSize
     }));
   };
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Header 
-        selectedTheme={selectedTheme}
-        onThemeChange={setSelectedTheme}
-        colorPalettes={colorPalettes}
-      />
-      <Container maxWidth="lg" sx={{ px: 2, minHeight: 'calc(100vh - 200px)' }}>
-        <EditorPanel
-          state={editorState}
-          setState={setEditorState}
-          onSave={() => setSaveDialogOpen(true)}
-          onCanvasSizeChange={handleCanvasSizeChange}
+      
+      {/* Main App Container */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+        }}
+      >
+        {/* Header */}
+        <Header 
+          selectedTheme={selectedTheme}
+          onThemeChange={setSelectedTheme}
+          colorPalettes={colorPalettes}
         />
-        <PreviewPanel state={editorState} ref={previewRef} />
-        <SaveDialog
-          open={saveDialogOpen}
-          onClose={() => setSaveDialogOpen(false)}
-          previewRef={previewRef}
-          state={editorState}
-        />
-      </Container>
-      <Footer 
-        selectedTheme={selectedTheme} 
-        colorPalettes={colorPalettes} 
-        isDark={prefersDark}
+        
+        {/* Main Content Area */}
+        <Box 
+          sx={{ 
+            flex: 1,
+            display: 'flex',
+            overflow: 'hidden', // Prevent content from spilling over
+          }}
+        >
+          {/* Desktop Sidebar */}
+          {!isMobile && (
+            <Box
+              sx={{
+                width: 304, // 300px + 4px margin
+                flexShrink: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                py: 2, // Vertical padding
+              }}
+            >
+              <Sidebar
+                state={editorState}
+                setState={setEditorState}
+                onSave={() => setSaveDialogOpen(true)}
+                onCanvasSizeChange={handleCanvasSizeChange}
+              />
+            </Box>
+          )}
+
+          {/* Main Content Area - Centered Canvas */}
+          <Box
+            sx={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              overflow: 'auto',
+              py: 2, // Vertical padding
+              pb: isMobile ? 12 : 2, // Extra padding for mobile toolbar
+            }}
+          >
+            <PreviewPanel state={editorState} ref={previewRef} />
+          </Box>
+
+          {/* Mobile Bottom Toolbar */}
+          {isMobile && (
+            <MobileToolbar
+              state={editorState}
+              setState={setEditorState}
+              onSave={() => setSaveDialogOpen(true)}
+              onCanvasSizeChange={handleCanvasSizeChange}
+            />
+          )}
+        </Box>
+      </Box>
+
+      {/* Save Dialog */}
+      <SaveDialog
+        open={saveDialogOpen}
+        onClose={() => setSaveDialogOpen(false)}
+        previewRef={previewRef}
+        state={editorState}
       />
     </ThemeProvider>
   );

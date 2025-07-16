@@ -1,151 +1,182 @@
-import React, { forwardRef, useEffect, useState } from "react";
-import { Paper, Box, useTheme, useMediaQuery } from "@mui/material";
+import React, { forwardRef, useMemo } from "react";
+import {
+  Box,
+  Typography,
+  useTheme,
+  useMediaQuery,
+} from "@mui/material";
 
-const PreviewPanel = forwardRef(({ state }: any, ref: any) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
-  const [responsiveCanvasSize, setResponsiveCanvasSize] = useState({
-    width: state.canvasSize.width,
-    height: state.canvasSize.height
-  });
+interface PreviewPanelProps {
+  state: any;
+}
 
-  useEffect(() => {
-    const calculateResponsiveSize = () => {
-      const containerPadding = 48; // Total padding (24px on each side)
-      let maxWidth;
+const PreviewPanel = forwardRef<HTMLDivElement, PreviewPanelProps>(
+  ({ state }, ref) => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery("(max-width:768px)");
+
+    // Calculate canvas dimensions with responsive logic
+    const canvasDimensions = useMemo(() => {
+      const aspectRatio = state.canvasSize.width / state.canvasSize.height;
       
       if (isMobile) {
-        maxWidth = window.innerWidth - containerPadding - 32; // Extra margin for mobile
-      } else if (isTablet) {
-        maxWidth = window.innerWidth - containerPadding - 64; // Extra margin for tablet
+        // For mobile: fixed width with dynamic height
+        const mobileWidth = Math.min(350, window.innerWidth - 32); // 16px padding on each side
+        const mobileHeight = mobileWidth / aspectRatio;
+        
+        return {
+          width: mobileWidth,
+          height: mobileHeight,
+        };
       } else {
-        maxWidth = Math.min(window.innerWidth - containerPadding - 100, 1200); // Desktop max width
+        // For desktop: fixed height with dynamic width (original logic)
+        const fixedHeight = 500;
+        const calculatedWidth = fixedHeight * aspectRatio;
+        
+        return {
+          width: calculatedWidth,
+          height: fixedHeight,
+        };
       }
-      
-      const originalWidth = state.canvasSize.width;
-      const originalHeight = state.canvasSize.height;
-      
-      if (originalWidth <= maxWidth) {
-        // If canvas fits, use original size
-        setResponsiveCanvasSize({
-          width: originalWidth,
-          height: originalHeight
-        });
+    }, [state.canvasSize.width, state.canvasSize.height, isMobile]);
+
+    // Calculate font size relative to canvas size
+    const responsiveFontSize = useMemo(() => {
+      if (isMobile) {
+        // For mobile: scale based on width
+        const scaleFactor = canvasDimensions.width / state.canvasSize.width;
+        return state.size * scaleFactor;
       } else {
-        // Scale down proportionally
-        const scaleFactor = maxWidth / originalWidth;
-        setResponsiveCanvasSize({
-          width: maxWidth,
-          height: Math.round(originalHeight * scaleFactor)
-        });
+        // For desktop: scale based on height (original logic)
+        const scaleFactor = canvasDimensions.height / state.canvasSize.height;
+        return state.size * scaleFactor;
       }
-    };
+    }, [state.size, canvasDimensions, state.canvasSize, isMobile]);
 
-    calculateResponsiveSize();
-    
-    const handleResize = () => {
-      calculateResponsiveSize();
-    };
+    // Calculate responsive spacing
+    const responsiveSpacing = useMemo(() => {
+      const scaleFactor = isMobile 
+        ? canvasDimensions.width / state.canvasSize.width
+        : canvasDimensions.height / state.canvasSize.height;
+      
+      return {
+        letterSpacing: state.letterSpacing * scaleFactor,
+        wordSpacing: state.wordSpacing * scaleFactor,
+      };
+    }, [state.letterSpacing, state.wordSpacing, canvasDimensions, state.canvasSize, isMobile]);
 
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [state.canvasSize, isMobile, isTablet]);
-
-  // Build text decoration string
-  const getTextDecoration = () => {
-    const decorations = [];
-    if (state.underline) decorations.push('underline');
-    if (state.strikethrough) decorations.push('line-through');
-    return decorations.length > 0 ? decorations.join(' ') : 'none';
-  };
-
-  // Build font weight - handle both bold toggle and weight setting
-  const getFontWeight = () => {
-    if (state.bold) {
-      // If bold is enabled, use a bold weight
-      return state.weight >= 600 ? state.weight : Math.max(state.weight + 300, 700);
-    }
-    return state.weight;
-  };
-  
-  return (
-    <Paper 
-      elevation={3} 
-      sx={{ 
-        p: 3, 
-        mb: 3, 
-        borderRadius: 3,
-        border: `2px solid ${theme.palette.divider}`,
-        maxWidth: '100%',
-        overflow: 'hidden'
-      }}
-    >
-      {/* Wrapper with checkerboard pattern for transparency visualization */}
+    return (
       <Box
         sx={{
-          width: responsiveCanvasSize.width,
-          height: responsiveCanvasSize.height,
-          borderRadius: 2,
-          border: `1px solid ${theme.palette.divider}`,
-          mx: 'auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100%',
+          width: '100%',
+          padding: isMobile ? 1 : 2,
           position: 'relative',
-          // Checkerboard pattern only for visual indication (not captured in export)
-          backgroundImage: state.transparentBackground ? 
-            `linear-gradient(45deg, ${theme.palette.divider}1A 25%, transparent 25%),
-             linear-gradient(-45deg, ${theme.palette.divider}1A 25%, transparent 25%),
-             linear-gradient(45deg, transparent 75%, ${theme.palette.divider}1A 75%),
-             linear-gradient(-45deg, transparent 75%, ${theme.palette.divider}1A 75%)` :
-            'none',
-          backgroundSize: state.transparentBackground ? '20px 20px' : 'auto',
-          backgroundPosition: state.transparentBackground ? '0 0, 0 10px, 10px -10px, -10px 0px' : 'auto',
         }}
       >
-        {/* Actual canvas content that gets exported */}
+        {/* Preview background pattern (only for visual reference, not exported) */}
+        {state.transparentBackground && (
+          <Box
+            sx={{
+              position: 'absolute',
+              width: `${canvasDimensions.width}px`,
+              height: `${canvasDimensions.height}px`,
+              backgroundImage: `linear-gradient(45deg, ${theme.palette.grey[300]} 25%, transparent 25%), 
+                               linear-gradient(-45deg, ${theme.palette.grey[300]} 25%, transparent 25%), 
+                               linear-gradient(45deg, transparent 75%, ${theme.palette.grey[300]} 75%), 
+                               linear-gradient(-45deg, transparent 75%, ${theme.palette.grey[300]} 75%)`,
+              backgroundSize: '20px 20px',
+              backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px',
+              pointerEvents: 'none',
+              zIndex: 0,
+              border: `1px solid ${theme.palette.divider}`,
+              borderRadius: 0,
+            }}
+          />
+        )}
+
+        {/* Actual canvas content for export */}
         <Box
           ref={ref}
           sx={{
-            width: '100%',
-            height: '100%',
-            // Fix: Use 'transparent' for truly transparent background
-            background: state.transparentBackground ? 
-              'transparent' :
-              state.bgColor,
-            display: "flex",
-            alignItems: "center",
-            justifyContent:
-              state.align === "left" ? "flex-start" :
-              state.align === "center" ? "center" : "flex-end",
-            overflow: "hidden",
-            transition: "all 0.3s cubic-bezier(.47,1.64,.41,.8)",
-            borderRadius: 2,
+            width: `${canvasDimensions.width}px`,
+            height: `${canvasDimensions.height}px`,
+            backgroundColor: state.transparentBackground 
+              ? 'transparent' 
+              : state.bgColor,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+            border: state.transparentBackground ? 'none' : `1px solid ${theme.palette.divider}`,
+            borderRadius: 0,
+            zIndex: 1,
           }}
         >
+          {/* Text Content */}
           <Box
             sx={{
-              width: "100%",
-              textAlign: state.align,
-              fontFamily: state.font,
-              fontWeight: getFontWeight(), // Use the computed font weight
-              fontStyle: state.italic ? 'italic' : 'normal', // Apply italic styling
-              textDecoration: getTextDecoration(), // Apply underline and strikethrough
-              fontSize: `${Math.max(state.size * (responsiveCanvasSize.width / state.canvasSize.width), 12)}px`, // Scale font size proportionally
-              color: state.textColor,
-              lineHeight: state.lineHeight,
-              letterSpacing: `${state.letterSpacing}px`,
-              wordSpacing: `${state.wordSpacing}px`,
-              wordBreak: "break-word",
-              transition: "all 0.3s cubic-bezier(.47,1.64,.41,.8)",
-              padding: 2,
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: state.align === 'center' ? 'center' : 
+                            state.align === 'right' ? 'flex-end' : 'flex-start',
+              padding: isMobile ? 1 : 2,
             }}
           >
-            {state.text || <span style={{ opacity: 0.5 }}>Preview your text here!</span>}
+            <Typography
+              sx={{
+                fontFamily: state.font,
+                fontSize: `${responsiveFontSize}px`,
+                fontWeight: state.bold ? 'bold' : state.weight,
+                color: state.textColor,
+                textAlign: state.align,
+                lineHeight: state.lineHeight,
+                letterSpacing: `${responsiveSpacing.letterSpacing}px`,
+                wordSpacing: `${responsiveSpacing.wordSpacing}px`,
+                fontStyle: state.italic ? 'italic' : 'normal',
+                textDecoration: [
+                  state.underline ? 'underline' : '',
+                  state.strikethrough ? 'line-through' : ''
+                ].filter(Boolean).join(' ') || 'none',
+                maxWidth: '90%',
+                wordBreak: 'break-word',
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {state.text || 'Enter your text'}
+            </Typography>
           </Box>
+
+          {/* Canvas Info Overlay (only visible when no text) */}
+          {!state.text && (
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 8,
+                right: 8,
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                color: 'white',
+                padding: '4px 8px',
+                borderRadius: 1,
+                fontSize: isMobile ? '10px' : '12px',
+                fontFamily: 'monospace',
+                zIndex: 2,
+              }}
+            >
+              {state.canvasSize.width} × {state.canvasSize.height}
+            </Box>
+          )}
         </Box>
       </Box>
-    </Paper>
-  );
-});
+    );
+  }
+);
 
 PreviewPanel.displayName = 'PreviewPanel';
 

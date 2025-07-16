@@ -15,7 +15,9 @@
     "axios": "^1.7.0",
     "html2canvas": "^1.4.1",
     "react": "^18.2.0",
+    "react-color": "^2.19.3",
     "react-dom": "^18.2.0",
+    "react-rnd": "^10.5.2",
     "webfontloader": "^1.6.28"
   },
   "devDependencies": {
@@ -23,6 +25,6 @@
     "@types/react-dom": "^18.2.14",
     "@vitejs/plugin-react": "^4.0.0",
     "typescript": "^5.8.3",
-    "vite": "^5.0.0"
+    "vite": "^5.4.19"
   }
 }
