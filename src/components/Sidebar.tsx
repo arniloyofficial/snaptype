@@ -100,7 +100,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, setState, onSave, onCanvasSize
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        borderRadius: 3,
+        borderRadius: 1,
         ml: 2, // Left margin
         boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 2px 16px rgba(0,0,0,0.08)',
         border: 'none',
@@ -111,7 +111,7 @@ const Sidebar: React.FC<SidebarProps> = ({ state, setState, onSave, onCanvasSize
       {/* Header */}
       <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', flexShrink: 0 }}>
         <Typography variant="h6" gutterBottom>
-          Create Snaptext
+          Editor Panel
         </Typography>
         
         {/* Text Input */}
